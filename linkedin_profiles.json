@@ -1,0 +1,1416 @@
+[
+  {
+    "url": "https://www.linkedin.com/in/jeffweiner08/",
+    "status": "success",
+    "profile": {
+      "identifier": "jeffweiner08",
+      "first_name": "Jeff",
+      "last_name": "Weiner",
+      "full_name": "Jeff Weiner",
+      "title": "Founding Partner",
+      "headline": "Founding Partner Next Play Ventures; Former CEO / Executive Chairman at LinkedIn",
+      "summary": "For much of the last three decades, Jeff's focus has been on building purpose-driven companies that create lasting value, helping leaders realize their potential, and aspiring to manage compassionately.He is the founding partner of Next Play Ventures, an early and growth stage venture fund focused on coaching and investing in entrepreneurial leaders building world-class, purpose-driven organizations. Previously, Jeff spent over 17 years at LinkedIn, including over 11 years as CEO and six as Executive Chairman. During his tenure as CEO, LinkedIn grew from 338 employees and $78M in revenue to over 16,000 employees and $7.9B in revenue, and expanded its membership from 33M to more than 690M. Throughout, he prioritized LinkedIn's vision of creating economic opportunity for every member of the global workforce.Jeff is also a founding LP and Investment Committee member at Westbound Equity Partners, an early stage fund backing diverse founders and companies serving underserved communities. Additionally, he is co-founder of The Compassion Project, a nonprofit working to ensure compassion is taught in every elementary school in the United States.Earlier in his career, Jeff was an Executive in Residence at Accel Partners and Greylock Partners, advising consumer technology portfolio companies and evaluating new investments. Before that, he spent seven years at Yahoo!, ultimately serving as EVP of the Network Division, where he led the company's consumer web portfolio including the Front Page, Mail, Search, and Media products.Jeff currently serves on the advisory board of the Boys &amp; Girls Club of the Peninsula and has previously served on the boards of Intuit, DonorsChoose.org, Everfi, and Malaria No More.",
+      "picture_url": "https://images.ai-ark.com/emFk5GFIRZd0KwEFLUXUS95uZeTj1xNu79oob8B1k-8/exp:1780358399/rs:fill:80:80/plain/s3://ark-person/images/52eaee22-c0d1-934f-448b-4ced4803958f.jpg",
+      "background_url": "https://media.licdn.com/dms/image/v2/D4D16AQGPoiykXRfmyw/profile-displaybackgroundimage-shrink_350_1400/B4DZ28XKpqGQAY-/0/1776981683256?e=1778716800&v=beta&t=oFrqhW6dx-ghuo_4SFaImk4LnXI8ov7872405hJyH3M",
+      "birth_date": null,
+      "industry": "Non-profit Organization Management",
+      "location": {
+        "default": "United States, North America",
+        "short": null,
+        "country": "United States",
+        "state": null,
+        "city": null,
+        "position": null
+      },
+      "languages": {
+        "primary_locale": {
+          "country": "US",
+          "language": "en"
+        },
+        "supported_locales": [
+          {
+            "country": "US",
+            "language": "en"
+          }
+        ],
+        "profile_languages": null
+      },
+      "badges": {
+        "premium": true,
+        "creator": true,
+        "open_to_work": false,
+        "hiring": false,
+        "verified": true,
+        "influencer": true
+      },
+      "department": {
+        "departments": [
+          "c_suite",
+          "consulting"
+        ],
+        "sub_departments": [
+          "founder",
+          "legal_executive",
+          "executive"
+        ],
+        "functions": [
+          "entrepreneurship"
+        ],
+        "seniority": "founder"
+      },
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/jeffweiner08",
+        "twitter": "https://x.com/jeffweiner",
+        "github": null,
+        "facebook": "https://www.facebook.com/jeffweiner7"
+      },
+      "skills": [
+        "Leadership",
+        "Entrepreneurship",
+        "Strategy",
+        "Product Development",
+        "Product Marketing",
+        "Executive Management",
+        "Business Strategy",
+        "Strategic Planning",
+        "Product Management",
+        "LinkedIn",
+        "Social Media",
+        "User Experience",
+        "Corporate Development",
+        "Non-profits",
+        "Analytics",
+        "Mergers & Acquisitions",
+        "Team Leadership",
+        "Thought Leadership",
+        "Business Operations",
+        "Leadership Development"
+      ],
+      "educations": [
+        {
+          "school": {
+            "id": "caa46f51-9215-60f2-e64a-b2964baeef5d",
+            "name": "The Wharton School",
+            "logo": "https://images.ai-ark.com/A7nQKourwz3nhwGFVPEx5KBApCOPUwdrQfhHlVGrVIQ/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/caa46f51-9215-60f2-e64a-b2964baeef5d.jpg",
+            "url": "https://www.linkedin.com/school/the-wharton-school"
+          },
+          "degree_name": "Bachelor of Science",
+          "field_of_study": "Economics",
+          "grade": null,
+          "date": {
+            "start": "1988-09-01",
+            "end": "1992-06-30"
+          }
+        }
+      ],
+      "position_groups": [
+        {
+          "company": {
+            "id": "2368e774-b24e-91e9-4dcb-a2548f6ff235",
+            "name": "Next Play Ventures",
+            "logo": "https://images.ai-ark.com/NE6BlngvoWbDL80EOc_UMo5x7zQUqIRkNSQ_KamS7rE/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/2368e774-b24e-91e9-4dcb-a2548f6ff235.jpg",
+            "url": "https://www.linkedin.com/company/next-play-ventures",
+            "employees": {
+              "start": 2,
+              "end": 10
+            }
+          },
+          "date": {
+            "start": "2008-09-01",
+            "end": null
+          },
+          "profile_positions": [
+            {
+              "company": "Next Play Ventures",
+              "description": "Our mission is to coach and invest in entrepreneurial leaders building world-class, purpose-driven organizations. Focus primarily on early stage and growth opportunities, e.g., Esusu, Entire, Brilliant, Lakeshore Learning, BRINC Drones, Blockit, Cloaked, and more",
+              "title": "Founding Partner",
+              "employment_type": null,
+              "location": "San Francisco Bay Area",
+              "date": {
+                "start": "2020-07-01",
+                "end": null
+              }
+            },
+            {
+              "company": "Next Play Ventures",
+              "description": "Investments include Figma, Notion, Brex, Scale, Headspace Health, Vox Media and more.  Previous exits include Slack (IPO) and Cloudera (IPO).",
+              "title": "Investor/Advisor",
+              "employment_type": null,
+              "location": "San Francisco Bay Area",
+              "date": {
+                "start": "2008-09-01",
+                "end": "2020-06-30"
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "878ca457-6e3d-dd86-6f9c-9262a6f20b41",
+            "name": "Westbound Equity Partners",
+            "logo": "https://images.ai-ark.com/w0Z-gu-nuGJpMqoEgk_cF7Tfk-YadqcpOIhUmDYXSjo/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/878ca457-6e3d-dd86-6f9c-9262a6f20b41.jpg",
+            "url": "https://www.linkedin.com/company/westboundequity",
+            "employees": {
+              "start": 2,
+              "end": 10
+            }
+          },
+          "date": {
+            "start": "2019-10-01",
+            "end": null
+          },
+          "profile_positions": [
+            {
+              "company": "Westbound Equity Partners",
+              "description": "Advisor and member of the investment committee for early stage fund and foundation focused on empowering diverse founders, start-ups serving underserved communities, and companies committed to building diverse teams.",
+              "title": "Founding LP, Investment Committee",
+              "employment_type": null,
+              "location": "San Francisco Bay Area",
+              "date": {
+                "start": "2019-10-01",
+                "end": null
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": null,
+            "name": "The Compassion Project",
+            "logo": null,
+            "url": null
+          },
+          "date": {
+            "start": "2017-09-01",
+            "end": null
+          },
+          "profile_positions": [
+            {
+              "company": "The Compassion Project",
+              "description": "The Compassion Project is an initiative designed to ensure compassion is taught in every primary school in the U.S. To date, 34k schools have registered, impacting over 1M students. Co-founded with Everfi, an innovative edtech provider that has been essential in developing and distributing the coursework.",
+              "title": "Co-Founder",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2017-09-01",
+                "end": null
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "18d2f1c1-7058-4727-e7cf-a22d32f9e1c8",
+            "name": "Boys & Girls Clubs of the Peninsula",
+            "logo": "https://images.ai-ark.com/BE23Um6XJVPFEzp3Kl5KNKMHOIpMkJm_AA41qVpMg4k/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/18d2f1c1-7058-4727-e7cf-a22d32f9e1c8.jpg",
+            "url": "https://www.linkedin.com/company/bgcpeninsula",
+            "employees": {
+              "start": 201,
+              "end": 500
+            }
+          },
+          "date": {
+            "start": "2011-01-01",
+            "end": null
+          },
+          "profile_positions": [
+            {
+              "company": "Boys & Girls Clubs of the Peninsula",
+              "description": "BGCP’s mission is to help its members develop the academic and life skills they need to complete high school ready for college and career.\n\nBGCP serves youth in grades K–12 at nine locations: three clubhouses and six school sites in East Palo Alto, Menlo Park, and Redwood City, where over half the youth drop out of high school. While most youth development organizations select the young people whom they serve, BGCP serves all youth. The organization has grown rapidly over the past five years and now serves 2,000 active members at its nine sites.",
+              "title": "Member, Advisory Board",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2011-01-01",
+                "end": null
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "60ecc6ff-f76b-b973-25ad-8528412a323b",
+            "name": "LinkedIn",
+            "logo": "https://images.ai-ark.com/kHrKTu92OskmMJtCR1BXXqT6_3J3gLeNbvo-dXGYQJ8/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/60ecc6ff-f76b-b973-25ad-8528412a323b.jpg",
+            "url": "https://www.linkedin.com/company/linkedin",
+            "employees": {
+              "start": 10001,
+              "end": null
+            }
+          },
+          "date": {
+            "start": "2008-12-01",
+            "end": "2026-04-30"
+          },
+          "profile_positions": [
+            {
+              "company": "LinkedIn",
+              "description": "Help LinkedIn realize its vision of creating economic opportunity for every member of the global workforce. Continue to mentor and coach the leadership team, and advise on key strategic initiatives.",
+              "title": "Executive Chairman",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2020-07-01",
+                "end": "2026-04-30"
+              }
+            },
+            {
+              "company": "LinkedIn",
+              "description": "Over 11 year tenure as CEO, LinkedIn grew its membership base from 33M to more than 690M, increased its revenue from $78M to $7.9B and expanded the team from 338 employees to over 16,000.",
+              "title": "CEO",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2008-12-01",
+                "end": "2020-06-30"
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "f5ddf914-3dac-ff9e-753f-3af88ee314ea",
+            "name": "DonorsChoose",
+            "logo": "https://images.ai-ark.com/tNr80hL-0EcOSNjD_CQCnFx6b6hJnXWb03RVO2jeBcU/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/f5ddf914-3dac-ff9e-753f-3af88ee314ea.jpg",
+            "url": "https://www.linkedin.com/company/donorschoose",
+            "employees": {
+              "start": 51,
+              "end": 200
+            }
+          },
+          "date": {
+            "start": "2007-01-01",
+            "end": "2024-10-31"
+          },
+          "profile_positions": [
+            {
+              "company": "DonorsChoose",
+              "description": "One of the web's leading philanthropic marketplaces, designed to enable teachers to upload classroom projects in need of funding, and for anyone to select and fund a project.",
+              "title": "Member, Board of Directors",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2007-01-01",
+                "end": "2024-10-31"
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "d0b76636-bab6-10fd-f6e4-376b0deac4ef",
+            "name": "Intuit",
+            "logo": "https://images.ai-ark.com/Q_lN4q4KS81sgfYZimmqIdTkDMDmq8GXDNkwePXtfIU/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/d0b76636-bab6-10fd-f6e4-376b0deac4ef.jpg",
+            "url": "https://www.linkedin.com/company/intuit",
+            "employees": {
+              "start": 10001,
+              "end": null
+            }
+          },
+          "date": {
+            "start": "2012-04-01",
+            "end": "2023-01-31"
+          },
+          "profile_positions": [
+            {
+              "company": "Intuit",
+              "description": "Intuit is a leading provider of innovative business and financial management solutions for small and medium-sized businesses, consumers, accounting professionals and financial institutions.",
+              "title": "Member, Board of Directors",
+              "employment_type": null,
+              "location": "Mountain View, CA",
+              "date": {
+                "start": "2012-04-01",
+                "end": "2023-01-31"
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "6c29cbcc-2ba0-2c35-1db4-8125ceee5865",
+            "name": "Everfi",
+            "logo": "https://images.ai-ark.com/geJnmRWjvMcg0YZGlIj_fjujviZJJ08VscLlMSbMr00/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/6c29cbcc-2ba0-2c35-1db4-8125ceee5865.jpg",
+            "url": "https://www.linkedin.com/company/everfieducation",
+            "employees": {
+              "start": 201,
+              "end": 500
+            }
+          },
+          "date": {
+            "start": "2017-09-01",
+            "end": "2021-12-31"
+          },
+          "profile_positions": [
+            {
+              "company": "EVERFI",
+              "description": "EVERFI is an international technology company driving social impact through education to address the most challenging issues affecting society ranging from financial wellness to mental health to workplace conduct and other critical topics. Founded in 2008, EVERFI’s Impact-as-a-Service™ solution and digital educational content have reached more than 45 million learners globally.",
+              "title": "Member Board Of Directors",
+              "employment_type": null,
+              "location": "Washington D.C. Metro Area",
+              "date": {
+                "start": "2017-09-01",
+                "end": "2021-12-31"
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "fd3cf6e6-114f-7afd-6636-89922df0233a",
+            "name": "Venture For America",
+            "logo": "https://images.ai-ark.com/jx5qHm9M1-ERLKvabiF1Dr6n4EGI5jJD97g4ePxFuVE/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/fd3cf6e6-114f-7afd-6636-89922df0233a.jpg",
+            "url": "https://www.linkedin.com/company/venture-for-america",
+            "employees": {
+              "start": 11,
+              "end": 50
+            }
+          },
+          "date": {
+            "start": "2012-01-01",
+            "end": "2021-06-30"
+          },
+          "profile_positions": [
+            {
+              "company": "Venture For America",
+              "description": "Innovative fellowship program that places top college graduates in start-ups for two years in low-cost U.S. cities to generate job growth and train the next generation of entrepreneurs.",
+              "title": "Member, Advisory Board",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2012-01-01",
+                "end": "2021-06-30"
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "0c622045-01d5-114d-156c-27ee47f7be4f",
+            "name": "Malaria No More",
+            "logo": "https://images.ai-ark.com/NbDdN3uiUn4VHE6I2thO3wEsIDbh5rKyWIj5ZIjNreM/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/0c622045-01d5-114d-156c-27ee47f7be4f.jpg",
+            "url": "https://www.linkedin.com/company/malaria-no-more",
+            "employees": {
+              "start": 11,
+              "end": 50
+            }
+          },
+          "date": {
+            "start": "2007-01-01",
+            "end": "2015-12-31"
+          },
+          "profile_positions": [
+            {
+              "company": "Malaria No More",
+              "description": "Non-profit organization with the mission to eradicate the millions of preventable and treatable deaths due to malaria.  Working in conjunction with the United Nations Millennium Development Goals.",
+              "title": "Member, Board of Directors",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2007-01-01",
+                "end": "2015-12-31"
+              }
+            }
+          ]
+        }
+      ],
+      "company": {
+        "id": "2368e774-b24e-91e9-4dcb-a2548f6ff235",
+        "name": "Next Play Ventures",
+        "legal_name": "Next Play Ventures, LLC",
+        "description": "Our mission is to coach and invest in entrepreneurial leaders building world-class, purpose-driven organizations. Led by Jeff Weiner and Brian Rumao.\n\nSector focus areas include B2B / enterprise software, financial tech, consumer apps, health and wellness and education. We are interested in productivity software and virtual work, direct-to-consumer / e-commerce, SaaS, and data and AI/ML-powered platforms\n\nInvestments include: Bicycle Health, Brex, Brightwheel, Brilliant, Browser Company, Cameo, Cloudera (IPO: CLDR), Common Room, Cricket Health, CurlMix, EdLyft, Encantos, Esusu, Everfi, Evervault, Fast, Figma, Gather, Ginger, Hatch, Headspace, Linktree, Little Passports, LogicGate, Nana Academy, Notion, Pace, Pine Field, Scale, Seesaw, Slack (IPO: WORK), SpoonfulOne, Toucan, Trala, Truework, Vox Media, Wellthy, Wildlife Studios.",
+        "overview": "Our mission is to coach and invest in entrepreneurial leaders building world-class, purpose-driven organizations. Led by Jeff Weiner and Brian Rumao.\n\nSector focus areas include B2B / enterprise software, financial tech, consumer apps, health and wellness and education. We are interested in productivity software and virtual work, direct-to-consumer / e-commerce, SaaS, and data and AI/ML-powered platforms.",
+        "founded_year": 2014,
+        "type": "PRIVATELY_HELD",
+        "industry": "venture capital and private equity principals",
+        "staff": {
+          "total": 5,
+          "range_start": 2,
+          "range_end": 10
+        },
+        "website": "http://www.nextplayventures.com",
+        "domain": "nextplayventures.com",
+        "linkedin_url": "https://www.linkedin.com/company/next-play-ventures",
+        "facebook_url": null,
+        "twitter_url": "https://x.com/nextplayVC",
+        "crunchbase_url": "https://www.crunchbase.com/organization/nextplay-ventures",
+        "headquarter": {
+          "continent": "North America",
+          "country": "United States",
+          "state": "California",
+          "city": "Menlo Park",
+          "postal_code": "94025",
+          "raw_address": "Menlo Park, California, United States, North America",
+          "position": {
+            "lng": -122.042,
+            "lat": 37.39271
+          }
+        },
+        "technologies": [
+          {
+            "name": "commoncrawl top 10m",
+            "category": "widgets"
+          },
+          {
+            "name": "AI",
+            "category": "Other"
+          },
+          {
+            "name": "Basis",
+            "category": "Advertising Networks"
+          },
+          {
+            "name": "Circle",
+            "category": "Financial Software"
+          },
+          {
+            "name": "Databricks",
+            "category": "Analytics and Tracking"
+          },
+          {
+            "name": "Google Analytics",
+            "category": "Analytics and Tracking"
+          },
+          {
+            "name": "Google Tag Manager",
+            "category": "Tag Management"
+          },
+          {
+            "name": "Micro",
+            "category": "Other"
+          },
+          {
+            "name": "Mobile Friendly",
+            "category": "Other"
+          },
+          {
+            "name": "Python",
+            "category": "Frameworks and Programming Languages"
+          },
+          {
+            "name": "Remote",
+            "category": "Other"
+          },
+          {
+            "name": "Reviews",
+            "category": "Customer Reviews"
+          },
+          {
+            "name": "Squarespace ECommerce",
+            "category": "E-commerce Platforms"
+          },
+          {
+            "name": "TikTok",
+            "category": "Other"
+          },
+          {
+            "name": "Typekit",
+            "category": "Fonts"
+          }
+        ],
+        "industries": [
+          "education",
+          "information technology",
+          "software",
+          "venture capital and private equity principals",
+          "e-commerce",
+          "internet"
+        ],
+        "keywords": [],
+        "naics": [
+          "611710",
+          "623990",
+          "541512"
+        ],
+        "revenue_amount": "100000-500000",
+        "funding_total": null,
+        "ipo_date": null,
+        "it_spend": 109113,
+        "last_updated": "2026-05-07"
+      },
+      "last_updated": "2026-05-07"
+    },
+    "_metadata": {
+      "extracted_at": "2026-05-30T10:51:25.54Z"
+    }
+  },
+  {
+    "url": "https://www.linkedin.com/in/satyanadella/",
+    "status": "success",
+    "profile": {
+      "identifier": "satyanadella",
+      "first_name": "Satya",
+      "last_name": "Nadella",
+      "full_name": "Satya Nadella",
+      "title": "Chairman and CEO",
+      "headline": "Chairman and CEO at Microsoft",
+      "summary": "As chairman and CEO of Microsoft, I define my mission and that of my company as empowering every person and every organization on the planet to achieve more.",
+      "picture_url": "https://images.ai-ark.com/IMtLslmhFDviLrnmekR4TeHYJ0MBxSklMprrdOjblJk/exp:1780358399/rs:fill:80:80/plain/s3://ark-person/images/e6b2d0fc-7bec-6754-6cd9-1b8d79ef5743.jpg",
+      "background_url": "https://media.licdn.com/dms/image/v2/D5616AQFuhBYf-ocZug/profile-displaybackgroundimage-shrink_350_1400/B56ZeD5uqRGQAc-/0/1750264638752?e=1779321600&v=beta&t=cyZevvHuuRSNabqNYktb94cjz272tBRCewd4PoSeidY",
+      "birth_date": null,
+      "industry": "Computer Software",
+      "location": {
+        "default": "Redmond, Washington, United States, North America",
+        "short": "Redmond, Washington",
+        "country": "United States",
+        "state": "Washington",
+        "city": "Redmond",
+        "position": null
+      },
+      "languages": {
+        "primary_locale": {
+          "country": "US",
+          "language": "en"
+        },
+        "supported_locales": [
+          {
+            "country": "US",
+            "language": "en"
+          }
+        ],
+        "profile_languages": null
+      },
+      "badges": {
+        "premium": true,
+        "creator": true,
+        "open_to_work": false,
+        "hiring": false,
+        "verified": true,
+        "influencer": true
+      },
+      "department": {
+        "departments": [
+          "c_suite"
+        ],
+        "sub_departments": [
+          "founder",
+          "executive"
+        ],
+        "functions": [
+          "entrepreneurship"
+        ],
+        "seniority": "c_suite"
+      },
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/satyanadella",
+        "twitter": null,
+        "github": null,
+        "facebook": null
+      },
+      "skills": [],
+      "educations": [
+        {
+          "school": {
+            "id": "370c88f3-ed45-7ffd-6ab6-61a6b169bdc6",
+            "name": "The University of Chicago Booth School of Business",
+            "logo": "https://images.ai-ark.com/S-na5z_SEF3ER7DYYXvv6nrKTsTaiOwAFuxKWs0z5cU/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/370c88f3-ed45-7ffd-6ab6-61a6b169bdc6.jpg",
+            "url": "https://www.linkedin.com/school/universityofchicagoboothschoolofbusiness"
+          },
+          "degree_name": null,
+          "field_of_study": null,
+          "grade": null,
+          "date": {
+            "start": "1994-01-01",
+            "end": "1996-12-31"
+          }
+        },
+        {
+          "school": {
+            "id": "0ee0eae6-9f4b-fbd6-b700-9388f260b11b",
+            "name": "Manipal Institute of Technology",
+            "logo": "https://images.ai-ark.com/DPakSf1jL8OhQhqoYYeFHBpmApXgo-3a-iwiskJKuTg/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/0ee0eae6-9f4b-fbd6-b700-9388f260b11b.jpg",
+            "url": "https://www.linkedin.com/school/manipal-institute-of-technology"
+          },
+          "degree_name": "Bachelor’s Degree",
+          "field_of_study": "Electrical Engineering",
+          "grade": null,
+          "date": null
+        },
+        {
+          "school": {
+            "id": "5f562570-8abe-0e7b-88f9-77389065d45e",
+            "name": "University of Wisconsin-Milwaukee",
+            "logo": "https://images.ai-ark.com/EXMMrqtZ7SsplYPIUKXphi8MOrYKmBj9DvmZHEjcU0c/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/5f562570-8abe-0e7b-88f9-77389065d45e.jpg",
+            "url": "https://www.linkedin.com/school/uwmilwaukee"
+          },
+          "degree_name": "Master’s Degree",
+          "field_of_study": "Computer Science",
+          "grade": null,
+          "date": null
+        }
+      ],
+      "position_groups": [
+        {
+          "company": {
+            "id": "76b8453e-6a29-538f-90b1-ec2d99ae630a",
+            "name": "Microsoft",
+            "logo": "https://images.ai-ark.com/N5YrzPP73TTG0q88dPENoWfkCnSvePkxCsqIQUMgoDg/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/76b8453e-6a29-538f-90b1-ec2d99ae630a.jpg",
+            "url": "https://www.linkedin.com/company/microsoft",
+            "employees": {
+              "start": 10001,
+              "end": null
+            }
+          },
+          "date": {
+            "start": "2014-02-01",
+            "end": null
+          },
+          "profile_positions": [
+            {
+              "company": "Microsoft",
+              "description": null,
+              "title": "Chairman and CEO",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2014-02-01",
+                "end": null
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "863e0807-9bcd-8419-b89a-6d49273fd845",
+            "name": "University of Chicago",
+            "logo": "https://images.ai-ark.com/XLmv1RBiWPP0tKJjMMpJUaaZkqoXgldOFXHRJFEDcZw/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/863e0807-9bcd-8419-b89a-6d49273fd845.jpg",
+            "url": "https://www.linkedin.com/school/uchicago",
+            "employees": {
+              "start": 10001,
+              "end": null
+            }
+          },
+          "date": {
+            "start": "2018-01-01",
+            "end": null
+          },
+          "profile_positions": [
+            {
+              "company": "University of Chicago",
+              "description": null,
+              "title": "Member Board Of Trustees",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2018-01-01",
+                "end": null
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "603c4c79-87a6-a1c7-74cb-7084adbd8ba1",
+            "name": "Starbucks",
+            "logo": "https://images.ai-ark.com/Oz0vKRByjCh-NYJof1QrcTIUkGbkpGxY5QD2I7nhDKg/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/603c4c79-87a6-a1c7-74cb-7084adbd8ba1.jpg",
+            "url": "https://www.linkedin.com/company/starbucks",
+            "employees": {
+              "start": 10001,
+              "end": null
+            }
+          },
+          "date": {
+            "start": "2017-01-01",
+            "end": "2024-12-31"
+          },
+          "profile_positions": [
+            {
+              "company": "Starbucks",
+              "description": null,
+              "title": "Board Member",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2017-01-01",
+                "end": "2024-12-31"
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "bcc59c21-0e7d-d964-b9e4-aa42514ac13f",
+            "name": "The Business Council U.S.",
+            "logo": "https://images.ai-ark.com/mWz0CgBEuM7FIlgniIx9Ufi2UNOFiiq8U9BEkJnI5E4/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/bcc59c21-0e7d-d964-b9e4-aa42514ac13f.jpg",
+            "url": "https://www.linkedin.com/company/the-business-council-us",
+            "employees": {
+              "start": 2,
+              "end": 10
+            }
+          },
+          "date": {
+            "start": "2021-01-01",
+            "end": "2023-12-31"
+          },
+          "profile_positions": [
+            {
+              "company": "The Business Council U.S.",
+              "description": null,
+              "title": "Chairman",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2021-01-01",
+                "end": "2023-12-31"
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "5d3db436-4e66-3fa5-d566-7a82e82dc0cd",
+            "name": "Fred Hutch",
+            "logo": "https://images.ai-ark.com/8vJ2YKwHr3QnuQuRMtH6iUcoiuVcF4-JtqPV_E5729A/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/5d3db436-4e66-3fa5-d566-7a82e82dc0cd.jpg",
+            "url": "https://www.linkedin.com/company/fredhutch",
+            "employees": {
+              "start": 1001,
+              "end": 5000
+            }
+          },
+          "date": {
+            "start": "2016-01-01",
+            "end": "2022-12-31"
+          },
+          "profile_positions": [
+            {
+              "company": "Fred Hutch",
+              "description": null,
+              "title": "Board Member",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2016-01-01",
+                "end": "2022-12-31"
+              }
+            }
+          ]
+        }
+      ],
+      "company": {
+        "id": "76b8453e-6a29-538f-90b1-ec2d99ae630a",
+        "name": "Microsoft",
+        "legal_name": "Microsoft Corporation",
+        "description": "Every company has a mission. What's ours? To empower every person and every organization to achieve more. We believe technology can and should be a force for good and that meaningful innovation contributes to a brighter world in the future and today. Our culture doesn’t just encourage curiosity; it embraces it. Each day we make progress together by showing up as our authentic selves. We show up with a learn-it-all mentality. We show up cheering on others, knowing their success doesn't diminish our own. We show up every day open to learning our own biases, changing our behavior, and inviting in differences. Because impact matters. \n\nMicrosoft operates in 190 countries and is made up of approximately 228,000 passionate employees worldwide.",
+        "overview": "Microsoft is an American multinational corporation that develops, manufactures, licenses, supports, and sells a range of software products and services.\n\nMicrosoft’s devices and consumer (D&C) licensing segment licenses the Windows operating system and related software, Microsoft Office for consumers, and the Windows Phone operating system. The company’s computing and gaming hardware segment provides Xbox gaming and entertainment consoles and accessories, second-party and third-party video games, and Xbox Live subscriptions; surface devices and accessories; and Microsoft PC accessories. Its phone hardware segment offers Lumia smartphones and other non-Lumia phones. Its D&C segment provides Windows Store, Xbox Live transactions, and Windows phone store; search advertising; display advertising; Office 365 Home and Office 365 Personal; first-party video games; and other consumer products and services as well as operating retail stores.\n\nMicrosoft’s commercial licensing segments license server products, including Windows Server, Microsoft SQL Server, Visual Studio, System Center, and related Client Access Licenses (CALs); Windows Embedded; Windows operating system; Microsoft Office for business, including Office, Exchange, SharePoint, Lync, and related CALs; Microsoft Dynamics business solutions; and Skype. Its commercial segment offers enterprise services, including premier support services and Microsoft consulting services; commercial cloud comprising Office 365 Commercial, other Microsoft Office online offerings, Dynamics CRM Online, and Microsoft Azure; and other commercial products and online services.\n\nThe company markets and distributes its products through original equipment manufacturers, distributors, and resellers, as well as online.",
+        "founded_year": 1975,
+        "type": "PUBLIC_COMPANY",
+        "industry": "software development",
+        "staff": {
+          "total": 229769,
+          "range_start": 10001,
+          "range_end": null
+        },
+        "website": "https://news.microsoft.com",
+        "domain": "microsoft.com",
+        "linkedin_url": "https://www.linkedin.com/company/microsoft",
+        "facebook_url": "https://www.facebook.com/Microsoft",
+        "twitter_url": "https://x.com/Microsoft",
+        "crunchbase_url": "https://www.crunchbase.com/organization/microsoft",
+        "headquarter": {
+          "continent": "North America",
+          "country": "United States",
+          "state": "Washington",
+          "city": "Redmond",
+          "street": "1 Microsoft Way",
+          "postal_code": "98052",
+          "raw_address": "1 Microsoft Way, Redmond, Washington, United States, North America",
+          "position": {
+            "lng": -122.33279,
+            "lat": 47.591396
+          }
+        },
+        "technologies": [
+          {
+            "name": "organization schema",
+            "category": "framework"
+          },
+          {
+            "name": "microsoft ajax content delivery network",
+            "category": "cdn"
+          },
+          {
+            "name": "seo_h2",
+            "category": "seo_headers"
+          },
+          {
+            "name": "azure edge",
+            "category": "cdn"
+          },
+          {
+            "name": "seo_h1",
+            "category": "seo_headers"
+          },
+          {
+            "name": "akamai",
+            "category": "cdn"
+          },
+          {
+            "name": "microsoft azure cdn",
+            "category": "cdn"
+          },
+          {
+            "name": "akamai mpulse",
+            "category": "analytics"
+          },
+          {
+            "name": "adobe experience manager",
+            "category": "cms"
+          },
+          {
+            "name": "Akamai",
+            "category": "Content Delivery Networks"
+          },
+          {
+            "name": "Outlook",
+            "category": "Email Providers"
+          },
+          {
+            "name": "Microsoft Azure Hosting",
+            "category": "Hosting"
+          },
+          {
+            "name": "Facebook Widget",
+            "category": "Widgets"
+          },
+          {
+            "name": "Kentico",
+            "category": "CMS"
+          },
+          {
+            "name": "Akamai RUM",
+            "category": "Web Performance Monitoring"
+          }
+        ],
+        "industries": [
+          "data management",
+          "software development",
+          "information technology",
+          "network security",
+          "software",
+          "devops",
+          "application performance management",
+          "artificial intelligence (ai)",
+          "business development",
+          "management information systems",
+          "information services"
+        ],
+        "keywords": [
+          "business software",
+          "developer tools",
+          "home & educational software",
+          "tablets",
+          "search",
+          "advertising",
+          "servers",
+          "windows operating system",
+          "windows applications & platforms",
+          "smartphones",
+          "cloud computing",
+          "quantum computing",
+          "future of work",
+          "productivity",
+          "ai",
+          "artificial intelligence",
+          "machine learning",
+          "laptops",
+          "mixed reality",
+          "virtual reality",
+          "gaming",
+          "developers",
+          "it professional"
+        ],
+        "naics": [
+          "541511",
+          "423430",
+          "541512"
+        ],
+        "revenue_amount": "10000000000-9223372036854775807",
+        "funding_total": 1000000,
+        "ipo_date": "1986-03-13",
+        "it_spend": 66692471976,
+        "last_updated": "2026-05-07"
+      },
+      "last_updated": "2026-05-07"
+    },
+    "_metadata": {
+      "extracted_at": "2026-05-30T10:51:25.672Z"
+    }
+  },
+  {
+    "url": "https://www.linkedin.com/in/williamhgates/",
+    "status": "success",
+    "profile": {
+      "identifier": "williamhgates",
+      "first_name": "Bill",
+      "last_name": "Gates",
+      "full_name": "Bill Gates",
+      "title": "Co-chair",
+      "headline": "Chair, Gates Foundation and Founder, Breakthrough Energy",
+      "summary": "Chair of the Gates Foundation. Founder of Breakthrough Energy. Co-founder of Microsoft. Voracious reader. Avid traveler. Active blogger.",
+      "picture_url": "https://images.ai-ark.com/1bRX0KEqH1OtXty5eGjdwoFxxF_MhrncLUPph1k_GeY/exp:1780358399/rs:fill:80:80/plain/s3://ark-person/images/29461434-bdbf-6b6b-8e54-811b74c58869.jpg",
+      "background_url": "https://media.licdn.com/dms/image/v2/D5616AQEjhPbTCeblYg/profile-displaybackgroundimage-shrink_350_1400/B56ZcytR5SGsAg-/0/1748902420393?e=1778716800&v=beta&t=80FueWSHZPmAVV71HGqYXj00hFFXnDu-DrwjBMLL1jc",
+      "birth_date": null,
+      "industry": "Philanthropy",
+      "location": {
+        "default": "Seattle, Washington, United States, North America",
+        "short": "Seattle, Washington",
+        "country": "United States",
+        "state": "Washington",
+        "city": "Seattle",
+        "position": null
+      },
+      "languages": {
+        "primary_locale": {
+          "country": "US",
+          "language": "en"
+        },
+        "supported_locales": [
+          {
+            "country": "US",
+            "language": "en"
+          }
+        ],
+        "profile_languages": null
+      },
+      "badges": {
+        "premium": true,
+        "creator": true,
+        "open_to_work": false,
+        "hiring": false,
+        "verified": false,
+        "influencer": true
+      },
+      "department": {
+        "departments": [
+          "c_suite",
+          "education"
+        ],
+        "sub_departments": [
+          "founder",
+          "governance"
+        ],
+        "functions": [
+          "entrepreneurship",
+          "education"
+        ],
+        "seniority": "founder"
+      },
+      "links": {
+        "linkedin": "https://www.linkedin.com/in/williamhgates",
+        "twitter": "https://x.com/billgates",
+        "github": "https://github.com/billgates007",
+        "facebook": "https://www.facebook.com/billgates"
+      },
+      "skills": [],
+      "educations": [
+        {
+          "school": {
+            "id": "2bb8de70-47a2-d76f-b48d-7a62c78c2670",
+            "name": "Harvard University",
+            "logo": "https://images.ai-ark.com/PV0bFWqHOJ61NSYIPuWBHbTFyRhI5pL482S2mxcoAKs/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/2bb8de70-47a2-d76f-b48d-7a62c78c2670.jpg",
+            "url": "https://www.linkedin.com/school/harvard-university"
+          },
+          "degree_name": null,
+          "field_of_study": null,
+          "grade": null,
+          "date": {
+            "start": "1973-01-01",
+            "end": "1975-12-31"
+          }
+        },
+        {
+          "school": {
+            "id": "3020470f-90a4-763b-8b31-efd31f2c7678",
+            "name": "Lakeside School",
+            "logo": "https://images.ai-ark.com/Uw9DVRLZCKk8RzzQQrkGQDQ4CgbgJWLTrUmRbQniEZ8/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/3020470f-90a4-763b-8b31-efd31f2c7678.jpg",
+            "url": "https://www.linkedin.com/school/lakeside-school"
+          },
+          "degree_name": null,
+          "field_of_study": null,
+          "grade": null,
+          "date": null
+        }
+      ],
+      "position_groups": [
+        {
+          "company": {
+            "id": "b38b5100-087e-b543-fa87-8edfc0569214",
+            "name": "Gates Foundation",
+            "logo": "https://images.ai-ark.com/3pW0MWZYt5BsY9preOKU4N9oVbqeR5vBdd4wb5ukK-k/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/b38b5100-087e-b543-fa87-8edfc0569214.jpg",
+            "url": "https://www.linkedin.com/company/gates-foundation",
+            "employees": {
+              "start": 1001,
+              "end": 5000
+            }
+          },
+          "date": {
+            "start": "2000-01-01",
+            "end": null
+          },
+          "profile_positions": [
+            {
+              "company": "Gates Foundation",
+              "description": null,
+              "title": "Co-chair",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2000-01-01",
+                "end": null
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "2bf16e47-2007-8a0e-090f-05032a478abe",
+            "name": "Breakthrough Energy",
+            "logo": "https://images.ai-ark.com/SfY3QLdMheVHik4Ik0v_mkr72i-TujIwwqxTNj28t-Y/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/2bf16e47-2007-8a0e-090f-05032a478abe.jpg",
+            "url": "https://www.linkedin.com/company/breakthrough-energy",
+            "employees": {
+              "start": 51,
+              "end": 200
+            }
+          },
+          "date": {
+            "start": "2015-01-01",
+            "end": null
+          },
+          "profile_positions": [
+            {
+              "company": "Breakthrough Energy",
+              "description": null,
+              "title": "Founder",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "2015-01-01",
+                "end": null
+              }
+            }
+          ]
+        },
+        {
+          "company": {
+            "id": "76b8453e-6a29-538f-90b1-ec2d99ae630a",
+            "name": "Microsoft",
+            "logo": "https://images.ai-ark.com/N5YrzPP73TTG0q88dPENoWfkCnSvePkxCsqIQUMgoDg/exp:1780358399/rs:fill:80:80/plain/s3://ark-company/images/76b8453e-6a29-538f-90b1-ec2d99ae630a.jpg",
+            "url": "https://www.linkedin.com/company/microsoft",
+            "employees": {
+              "start": 10001,
+              "end": null
+            }
+          },
+          "date": {
+            "start": "1975-01-01",
+            "end": null
+          },
+          "profile_positions": [
+            {
+              "company": "Microsoft",
+              "description": null,
+              "title": "Co-founder",
+              "employment_type": null,
+              "location": null,
+              "date": {
+                "start": "1975-01-01",
+                "end": null
+              }
+            }
+          ]
+        }
+      ],
+      "company": {
+        "id": "b38b5100-087e-b543-fa87-8edfc0569214",
+        "name": "Gates Foundation",
+        "legal_name": "Bill & Melinda Gates Foundation",
+        "description": "Guided by the belief that every life has equal value, the Gates Foundation works to help all people lead healthy, productive lives. In developing countries, we work with partners to create impactful solutions so that people can take charge of their futures and achieve their full potential. In the United States, we aim to ensure that everyone—especially those with the fewest resources—has access to the opportunities needed to succeed in school and life. Based in Seattle, Washington, the foundation is led by CEO Mark Suzman, under the direction of Bill Gates and our governing board.  ",
+        "overview": "The Bill & Melinda Gates Foundation is a grant-making foundation that supports initiatives in education, world health and population, and community giving in the Pacific Northwest. In its local region, the foundation promotes strategies and programs that help low income families.The Bill & Melinda Gates Foundation was co-founded by Bill Gates and Melinda Gates in 2000 and is based in Seattle, Washington, with regional offices in Washington, D.C.; New Delhi, India; Beijing, China; and London, United Kingdom. Its trustees are Bill and Melinda Gates, and Warren Buffett.",
+        "founded_year": 1997,
+        "type": "NON_PROFIT",
+        "industry": "non-profit organizations",
+        "staff": {
+          "total": 4190,
+          "range_start": 1001,
+          "range_end": 5000
+        },
+        "website": "https://www.gatesfoundation.org/about/careers",
+        "domain": "gatesfoundation.org",
+        "linkedin_url": "https://www.linkedin.com/company/gates-foundation",
+        "facebook_url": "https://www.facebook.com/billmelindagatesfoundation",
+        "twitter_url": "https://x.com/gatesfoundation",
+        "crunchbase_url": "https://www.crunchbase.com/organization/bill-melinda-gates-foundation",
+        "headquarter": {
+          "continent": "North America",
+          "country": "United States",
+          "state": "Washington",
+          "city": "Seattle",
+          "postal_code": "98109",
+          "raw_address": "Seattle, Washington, United States, North America",
+          "position": {
+            "lng": -122.33279,
+            "lat": 47.591396
+          }
+        },
+        "technologies": [
+          {
+            "name": "iphone / mobile compatible",
+            "category": "mobile"
+          },
+          {
+            "name": "viewport meta",
+            "category": "mobile"
+          },
+          {
+            "name": "domain not resolving",
+            "category": "hosting"
+          },
+          {
+            "name": "ssl by default",
+            "category": "ssl"
+          },
+          {
+            "name": "apple mobile web clips icon",
+            "category": "mobile"
+          },
+          {
+            "name": "google tag manager",
+            "category": "widgets"
+          },
+          {
+            "name": "hsts",
+            "category": "ssl"
+          },
+          {
+            "name": "content delivery network",
+            "category": "cdn"
+          },
+          {
+            "name": "wordpress",
+            "category": "cms"
+          },
+          {
+            "name": "font awesome",
+            "category": "widgets"
+          },
+          {
+            "name": "html5"
+          },
+          {
+            "name": "bootstrap"
+          },
+          {
+            "name": "adobe fonts"
+          },
+          {
+            "name": "jquery"
+          },
+          {
+            "name": ".net 4.5"
+          },
+          {
+            "name": "google analytics"
+          },
+          {
+            "name": "microsoft outlook"
+          },
+          {
+            "name": "cloudflare cdn"
+          },
+          {
+            "name": "wordpress"
+          },
+          {
+            "name": "office 365"
+          },
+          {
+            "name": "AI",
+            "category": "Other"
+          },
+          {
+            "name": "ASP.NET",
+            "category": "Frameworks and Programming Languages"
+          },
+          {
+            "name": "Apache",
+            "category": "Load Balancers"
+          },
+          {
+            "name": "Atlassian Cloud",
+            "category": "CMS"
+          },
+          {
+            "name": "Backbone JS Library",
+            "category": "CSS and JavaScript Libraries"
+          },
+          {
+            "name": "Bootstrap Framework",
+            "category": "CSS and JavaScript Libraries"
+          },
+          {
+            "name": "CloudFlare Hosting",
+            "category": "Hosting"
+          },
+          {
+            "name": "Cloudflare DNS",
+            "category": "Domain Name Services"
+          },
+          {
+            "name": "DoubleClick",
+            "category": "Ad Servers"
+          },
+          {
+            "name": "DoubleClick Conversion",
+            "category": "Advertising Networks"
+          },
+          {
+            "name": "DoubleClick Floodlight",
+            "category": "Tag Management"
+          },
+          {
+            "name": "ExactTarget",
+            "category": "Email Marketing"
+          },
+          {
+            "name": "Facebook Custom Audiences",
+            "category": "Retargeting"
+          },
+          {
+            "name": "Facebook Login (Connect)",
+            "category": "Social Login"
+          },
+          {
+            "name": "Facebook Widget",
+            "category": "Widgets"
+          },
+          {
+            "name": "Google Analytics",
+            "category": "Analytics and Tracking"
+          },
+          {
+            "name": "Google Dynamic Remarketing",
+            "category": "Retargeting"
+          },
+          {
+            "name": "Google Tag Manager",
+            "category": "Tag Management"
+          },
+          {
+            "name": "Hotjar",
+            "category": "Analytics and Tracking"
+          },
+          {
+            "name": "Linkedin Marketing Solutions",
+            "category": "Advertising Networks"
+          },
+          {
+            "name": "Microsoft Office 365",
+            "category": "Other"
+          },
+          {
+            "name": "Mobile Friendly",
+            "category": "Other"
+          },
+          {
+            "name": "New Relic",
+            "category": "Web Performance Monitoring"
+          },
+          {
+            "name": "OneTrust",
+            "category": "Widgets"
+          },
+          {
+            "name": "Outlook",
+            "category": "Email Providers"
+          },
+          {
+            "name": "Pantheon",
+            "category": "CMS"
+          },
+          {
+            "name": "Pardot",
+            "category": "Marketing Automation"
+          },
+          {
+            "name": "Remote",
+            "category": "Other"
+          },
+          {
+            "name": "Salesforce",
+            "category": "Customer Relationship Management"
+          },
+          {
+            "name": "SiteCore",
+            "category": "CMS"
+          },
+          {
+            "name": "SparkPost",
+            "category": "Email Delivery"
+          },
+          {
+            "name": "The Trade Desk",
+            "category": "Demand Side Platforms"
+          },
+          {
+            "name": "Twitter Advertising",
+            "category": "Advertising Networks"
+          },
+          {
+            "name": "Typekit",
+            "category": "Fonts"
+          },
+          {
+            "name": "Vimeo",
+            "category": "Online Video Platforms"
+          },
+          {
+            "name": "VueJS",
+            "category": "CSS and JavaScript Libraries"
+          },
+          {
+            "name": "WordPress.org",
+            "category": "CMS"
+          },
+          {
+            "name": "Workday Recruit",
+            "category": "Recruitment"
+          },
+          {
+            "name": "Zendesk",
+            "category": "Support and Feedback"
+          },
+          {
+            "name": "reCAPTCHA",
+            "category": "Captcha"
+          }
+        ],
+        "industries": [
+          "non-profit organizations",
+          "education",
+          "charity",
+          "impact investing",
+          "non profit"
+        ],
+        "keywords": [
+          "global health",
+          "global development",
+          "us education",
+          "gender equality"
+        ],
+        "naics": [
+          "813410",
+          "541720",
+          "541618"
+        ],
+        "revenue_amount": "100000000-500000000",
+        "funding_total": null,
+        "ipo_date": null,
+        "it_spend": 11878283,
+        "last_updated": "2026-05-07"
+      },
+      "last_updated": "2026-05-07"
+    },
+    "_metadata": {
+      "extracted_at": "2026-05-30T10:51:25.692Z"
+    }
+  }
+]

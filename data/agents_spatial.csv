@@ -1,0 +1,11 @@
+agent_id,agent_name,home_location,home_address,home_lat,home_lng,work_location,work_address,work_lat,work_lng,simulation_enabled
+sea_agent_0001,Charlie,"Capitol Hill, Seattle","Broadway & E Pike St, Seattle, WA 98122",47.6254,-122.3192,GE Healthcare — Bellevue,"500 108th Ave NE, Bellevue, WA 98004",47.6149,-122.2006,true
+sea_agent_0002,Anna,Redmond,"15600 NE 8th St, Redmond, WA 98052",47.674,-122.1215,Seattle University — First Hill,"901 12th Ave, Seattle, WA 98122",47.6059,-122.3199,true
+sea_agent_0003,Connor Thibault,"Fremont, Seattle","3501 Fremont Ave N, Seattle, WA 98103",47.6506,-122.3501,Amazon HQ — South Lake Union,"410 Terry Ave N, Seattle, WA 98109",47.6174,-122.3371,true
+sea_agent_0004,Valeria Bravo,"Columbia City, Seattle","4801 Rainier Ave S, Seattle, WA 98118",47.5597,-122.2907,Nordstrom HQ — Downtown Seattle,"1617 6th Ave, Seattle, WA 98101",47.6116,-122.3341,true
+sea_agent_0005,Lily,Bellevue,"10500 NE 8th St, Bellevue, WA 98004",47.6101,-122.2015,Microsoft Campus — Redmond,"1 Microsoft Way, Redmond, WA 98052",47.6423,-122.1301,true
+sea_agent_0006,Rupak,"Capitol Hill, Seattle","1014 E Union St, Seattle, WA 98122",47.6120,-122.3130,GE Healthcare — Bellevue,"500 108th Ave NE, Bellevue, WA 98004",47.6149,-122.2006,true
+sea_agent_0007,Declan,"Capitol Hill, Seattle","1014 E Pike St, Seattle, WA 98122",47.6147,-122.3130,Remitly — Downtown Seattle,"1111 3rd Ave, Seattle, WA 98101",47.6075,-122.3310,true
+sea_agent_0008,Priya,"South Lake Union, Seattle","301 Westlake Ave N, Seattle, WA 98109",47.6243,-122.3376,Expedia Group HQ — South Lake Union,"1111 Expedia Group Way W, Seattle, WA 98119",47.6213,-122.3697,true
+sea_agent_0009,Kenji,"Beacon Hill, Seattle","2110 15th Ave S, Seattle, WA 98144",47.5849,-122.3059,Blue Origin — Kent,"21218 76th Ave S, Kent, WA 98032",47.3877,-122.2474,true
+sea_agent_0010,Amara,"Rainier Valley, Seattle","3811 S Othello St, Seattle, WA 98118",47.5477,-122.2737,Urban League of Metropolitan Seattle — Central Area,"105 14th Ave, Seattle, WA 98122",47.6101,-122.3161,true

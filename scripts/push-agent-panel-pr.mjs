@@ -1,0 +1,1385 @@
+/**
+ * Creates branch feat/agent-panel-split, pushes two files, opens PR.
+ */
+import { execSync } from "child_process";
+
+const TOKEN  = execSync("gh auth token", { encoding: "utf8" }).trim();
+const REPO   = "priyanshumahey/sealantir";
+const BRANCH = "feat/agent-panel-split";
+const BASE   = "main";
+
+async function api(path, method = "GET", body) {
+  const res = await fetch(`https://api.github.com/repos/${REPO}/${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+      "Content-Type": "application/json",
+      "User-Agent": "sea-agent-dashboard",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`[${res.status}] ${path}\n${t}`);
+  }
+  return res.json();
+}
+
+function b64(str) {
+  return Buffer.from(str, "utf8").toString("base64");
+}
+
+// ---------------------------------------------------------------------------
+// File contents
+// ---------------------------------------------------------------------------
+
+const AGENT_PANEL = /* tsx */ `"use client"
+
+import dynamic from "next/dynamic"
+import * as React from "react"
+import {
+  ArrowsClockwise,
+  User,
+  X,
+  Lightning,
+} from "@phosphor-icons/react/dist/ssr"
+import { genConfig } from "react-nice-avatar"
+import type { AvatarFullConfig, NiceAvatarProps } from "react-nice-avatar"
+
+import { Button } from "@/components/ui/button"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
+import { supabase } from "@/lib/supabase"
+
+const Avatar = dynamic(() => import("react-nice-avatar"), {
+  ssr: false,
+  loading: () => <div className="size-full animate-pulse rounded-full bg-muted/40" />,
+}) as React.ComponentType<NiceAvatarProps>
+
+// ---------------------------------------------------------------------------
+// Prebuilt profiles — pulled from pseudo_agents CSVs
+// ---------------------------------------------------------------------------
+const PREBUILT = [
+  {
+    label: "Charlie",
+    name: "Charlie",
+    age: "22",
+    jobDescription: "Data Analyst at GE Healthcare Bellevue. Healthcare Technology.",
+    locationHome: "Capitol Hill, Seattle",
+    locationWork: "GE Healthcare — Bellevue",
+    personality: "Analytical, Data-driven, Passionate. Loves bouldering and café culture.",
+  },
+  {
+    label: "Anna",
+    name: "Anna",
+    age: "21",
+    jobDescription: "CS Student & TA at Seattle University. Education / Technology.",
+    locationHome: "Redmond, WA",
+    locationWork: "Seattle University — First Hill",
+    personality: "Creative, Community-focused, Adaptable. Thai food enthusiast, Gasworks Park regular.",
+  },
+  {
+    label: "Connor",
+    name: "Connor Thibault",
+    age: "24",
+    jobDescription: "Software Engineer I at Amazon AWS EC2. South Lake Union.",
+    locationHome: "Fremont, Seattle",
+    locationWork: "Amazon HQ — South Lake Union",
+    personality: "Analytical, Adaptable, Collaborative. Kayaks Lake Union on weekends.",
+  },
+  {
+    label: "Valeria",
+    name: "Valeria Bravo",
+    age: "25",
+    jobDescription: "Marketing Coordinator at Nordstrom HQ. Consumer Technology / Retail.",
+    locationHome: "Columbia City, Seattle",
+    locationWork: "Nordstrom HQ — Downtown Seattle",
+    personality: "Strategic, Community-focused, Communicative. Salsa dancer, farmers market regular.",
+  },
+  {
+    label: "Lily",
+    name: "Lily",
+    age: "26",
+    jobDescription: "UX Designer II at Microsoft Teams. Cross-cultural & accessibility design.",
+    locationHome: "Bellevue, WA",
+    locationWork: "Microsoft Campus — Redmond",
+    personality: "Creative, Methodical, Empathetic. Bellevue Botanical Garden regular.",
+  },
+] as const
+
+interface AgentCreationPanelProps {
+  onClose: () => void
+  onCreated: () => void
+}
+
+export function AgentCreationPanel({ onClose, onCreated }: AgentCreationPanelProps) {
+  const [name, setName]                     = React.useState("")
+  const [personality, setPersonality]       = React.useState("")
+  const [jobDescription, setJobDescription] = React.useState("")
+  const [locationWork, setLocationWork]     = React.useState("")
+  const [locationHome, setLocationHome]     = React.useState("")
+  const [age, setAge]                       = React.useState("")
+  const [config, setConfig]                 = React.useState<AvatarFullConfig>(() => genConfig())
+  const [saving, setSaving]                 = React.useState(false)
+  const [success, setSuccess]               = React.useState<string | null>(null)
+
+  const canDeploy = name.trim().length > 0
+
+  function loadPrebuilt(p: (typeof PREBUILT)[number]) {
+    setName(p.name)
+    setAge(p.age)
+    setJobDescription(p.jobDescription)
+    setLocationHome(p.locationHome)
+    setLocationWork(p.locationWork)
+    setPersonality(p.personality)
+    setConfig(genConfig())
+  }
+
+  const handleCreate = async () => {
+    if (!canDeploy) return
+    setSaving(true)
+    const { error } = await supabase.from("agents").insert({
+      name: name.trim(),
+      profile_pic: config,
+      job_description: jobDescription.trim() || null,
+      location_work: locationWork.trim() || null,
+      location_home: locationHome.trim() || null,
+      age: age ? parseInt(age) : null,
+      personality: personality.trim() || null,
+    })
+    setSaving(false)
+    if (error) { alert("Failed: " + error.message); return }
+    setSuccess(name)
+    onCreated()
+    setTimeout(() => {
+      setSuccess(null)
+      setName(""); setPersonality(""); setJobDescription("")
+      setLocationWork(""); setLocationHome(""); setAge("")
+      setConfig(genConfig())
+    }, 2000)
+  }
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden border-l border-border/60 bg-background text-foreground">
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 py-3">
+        <span className="text-[10px] uppercase tracking-[0.18em] text-foreground">
+          New Agent
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-sm p-1 text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
+          aria-label="Close panel"
+        >
+          <X size={14} />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto">
+        {/* Quick Load */}
+        <div className="border-b border-border/60 px-4 py-3">
+          <p className="mb-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            Quick Load
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {PREBUILT.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => loadPrebuilt(p)}
+                className="flex items-center gap-1 rounded border border-border/60 bg-card/60 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition hover:border-foreground/40 hover:bg-secondary/60 hover:text-foreground"
+              >
+                <Lightning size={9} weight="fill" />
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Avatar */}
+        <div className="flex items-center gap-4 border-b border-border/60 px-4 py-4">
+          <div className="size-14 shrink-0 overflow-hidden rounded-full border border-border/60 bg-muted/30">
+            <Avatar style={{ width: "100%", height: "100%" }} {...config} />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground">Agent avatar</p>
+            <button
+              type="button"
+              onClick={() => setConfig(genConfig())}
+              className="mt-1 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition hover:text-foreground"
+            >
+              <ArrowsClockwise size={11} />
+              Randomize
+            </button>
+          </div>
+        </div>
+
+        {/* Form fields */}
+        <div className="space-y-4 px-4 py-4">
+          <Field>
+            <FieldLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Name <span className="text-destructive">*</span>
+            </FieldLabel>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Agent name"
+              className="h-8 text-xs"
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Age
+            </FieldLabel>
+            <Input
+              type="number"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              placeholder="28"
+              className="h-8 text-xs"
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Job Description
+            </FieldLabel>
+            <Input
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              placeholder="Software engineer at a startup"
+              className="h-8 text-xs"
+            />
+          </Field>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                Home Location
+              </FieldLabel>
+              <Input
+                value={locationHome}
+                onChange={(e) => setLocationHome(e.target.value)}
+                placeholder="Capitol Hill"
+                className="h-8 text-xs"
+              />
+            </Field>
+            <Field>
+              <FieldLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                Work Location
+              </FieldLabel>
+              <Input
+                value={locationWork}
+                onChange={(e) => setLocationWork(e.target.value)}
+                placeholder="South Lake Union"
+                className="h-8 text-xs"
+              />
+            </Field>
+          </div>
+
+          <Field>
+            <FieldLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Personality
+            </FieldLabel>
+            <Textarea
+              value={personality}
+              onChange={(e) => setPersonality(e.target.value)}
+              placeholder="Describe how this agent should behave, their interests, traits…"
+              rows={4}
+              className="resize-none text-xs"
+            />
+          </Field>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="shrink-0 border-t border-border/60 px-4 py-3">
+        {success ? (
+          <div className="flex items-center justify-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 py-2">
+            <span className="inline-block size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_0_#34d399]" />
+            <span className="text-[10px] uppercase tracking-[0.18em] text-emerald-400">
+              {success} deployed
+            </span>
+          </div>
+        ) : (
+          <Button
+            size="sm"
+            className="w-full text-[10px] uppercase tracking-[0.18em]"
+            disabled={!canDeploy || saving}
+            onClick={handleCreate}
+          >
+            {saving ? "Deploying." : "Deploy Agent"}
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+`;
+
+// ---------------------------------------------------------------------------
+// Modified map/page.tsx — minimal diff: adds panelOpen + split layout
+// ---------------------------------------------------------------------------
+const MAP_PAGE = `"use client"
+
+import { useEffect, useRef, useState, useCallback } from "react"
+import dynamic from "next/dynamic"
+import mapboxgl from "mapbox-gl"
+import "mapbox-gl/dist/mapbox-gl.css"
+import { genConfig } from "react-nice-avatar"
+import type { NiceAvatarProps } from "react-nice-avatar"
+import {
+  ArrowsCounterClockwise,
+  CaretDown,
+  CaretUp,
+  Crosshair,
+  Cube,
+  List,
+  Play,
+  WaveSine,
+  X,
+} from "@phosphor-icons/react/dist/ssr"
+
+import { cn } from "@/lib/utils"
+import { supabase } from "@/lib/supabase"
+import { AgentCreationPanel } from "@/components/agent-creation-panel"
+
+const Avatar = dynamic(() => import("react-nice-avatar"), {
+  ssr: false,
+  loading: () => (
+    <div className="size-full animate-pulse rounded-full bg-muted/40" />
+  ),
+}) as React.ComponentType<NiceAvatarProps>
+
+const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
+
+const STYLES = {
+  Dark: "mapbox://styles/mapbox/dark-v11",
+  Light: "mapbox://styles/mapbox/light-v11",
+  Streets: "mapbox://styles/mapbox/streets-v12",
+  Satellite: "mapbox://styles/mapbox/satellite-streets-v12",
+} as const
+
+type StyleKey = keyof typeof STYLES
+
+const SEATTLE_CENTER: [number, number] = [-122.3321, 47.6062]
+const SEATTLE_BOUNDS: [[number, number], [number, number]] = [
+  [-122.65, 47.35],
+  [-122.05, 47.9],
+]
+
+const ZONES: [number, number, number, string][] = [
+  [-122.3351, 47.6080, 0.012, "Downtown Seattle"],
+  [-122.3380, 47.6250, 0.008, "South Lake Union"],
+  [-122.2015, 47.6101, 0.015, "Bellevue"],
+  [-122.1215, 47.6740, 0.012, "Redmond"],
+  [-122.0355, 47.6165, 0.015, "Sammamish"],
+]
+
+const COLORS = ["#ff5577", "#7dd3fc", "#fb923c", "#34d399", "#c084fc", "#facc15", "#f472b6", "#a3e635"]
+
+const MAX_FRAMES = 240
+const PULSE_COLOR = "#f59e0b"
+const AGENT_BACKDROP_COLOR = "#52525b"
+
+type TimelineFrame = {
+  total: number
+  perAgent: Record<string, number>
+}
+
+function randomInZone(zone: [number, number, number, string]): [number, number] {
+  const angle = Math.random() * Math.PI * 2
+  const r = Math.random() * zone[2]
+  return [zone[0] + r * Math.cos(angle), zone[1] + r * Math.sin(angle)]
+}
+
+type Agent = {
+  id: string
+  name: string
+  color: string
+  personality: string
+  config: Record<string, unknown>
+  start: [number, number]
+  end: [number, number]
+  zone: string
+  destZone: string
+  zoneIndex: number
+  job_description?: string
+  age?: number
+  location_home?: string
+  location_work?: string
+}
+
+async function fetchRoute(start: [number, number], end: [number, number]): Promise<[number, number][] | null> {
+  try {
+    const res = await fetch(
+      \`https://api.mapbox.com/directions/v5/mapbox/walking/\${start[0]},\${start[1]};\${end[0]},\${end[1]}?geometries=geojson&access_token=\${TOKEN}\`
+    )
+    const data = await res.json()
+    return data.routes?.[0]?.geometry?.coordinates ?? null
+  } catch { return null }
+}
+
+async function geocode(place: string): Promise<[number, number] | null> {
+  try {
+    const res = await fetch(
+      \`https://api.mapbox.com/search/geocode/v6/forward?q=\${encodeURIComponent(place + ", Seattle WA")}&limit=1&access_token=\${TOKEN}\`
+    )
+    const data = await res.json()
+    const coords = data.features?.[0]?.geometry?.coordinates
+    return coords ? [coords[0], coords[1]] : null
+  } catch { return null }
+}
+
+async function thinkAgent(agent: Agent, currentLocation: string, memories: { activity: string }[], simTime?: Date): Promise<{ activity: string; destination: string; reasoning: string; duration_minutes?: number } | null> {
+  try {
+    const res = await fetch("/api/agent/think", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agent, currentLocation, memories, simTime: simTime?.toISOString() }),
+    })
+    return await res.json()
+  } catch { return null }
+}
+
+function interpolateRoute(coords: [number, number][], stepsPerSegment: number): [number, number][] {
+  const result: [number, number][] = []
+  for (let i = 0; i < coords.length - 1; i++) {
+    const [x1, y1] = coords[i]
+    const [x2, y2] = coords[i + 1]
+    for (let j = 0; j < stepsPerSegment; j++) {
+      const t = j / stepsPerSegment
+      result.push([x1 + (x2 - x1) * t, y1 + (y2 - y1) * t])
+    }
+  }
+  result.push(coords[coords.length - 1])
+  return result
+}
+
+export default function MapPage() {
+  const mapContainer = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<mapboxgl.Map | null>(null)
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const speedRef = useRef(200)
+  const [style, setStyle] = useState<StyleKey>("Dark")
+  const [is3D, setIs3D] = useState(false)
+  const [time, setTime] = useState("--:--:--")
+  const [activityOpen, setActivityOpen] = useState(false)
+  const [timelineOpen, setTimelineOpen] = useState(false)
+  const [agentRunning, setAgentRunning] = useState(false)
+  const [speed, setSpeed] = useState(1)
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [loadingRoutes, setLoadingRoutes] = useState(false)
+  const agentsRef = useRef<Agent[]>([])
+  const [frames, setFrames] = useState<TimelineFrame[]>([])
+  const framesRef = useRef<TimelineFrame[]>([])
+  const positionsRef = useRef<[number, number][]>([])
+  const followingIndexRef = useRef<number | null>(null)
+  const followTargetRef = useRef<{ zoom: number; pitch: number }>({ zoom: 16.5, pitch: 55 })
+  const [followingIndex, setFollowingIndex] = useState<number | null>(null)
+  const runningRef = useRef(false)
+  const activeRoutesRef = useRef<(GeoJSON.Feature | null)[]>([])
+  const agentMemoriesRef = useRef<Record<string, string[]>>({})
+  const simTimeRef = useRef(new Date(new Date().setHours(8, 0, 0, 0)))
+  const [simTime, setSimTime] = useState("08:00 AM")
+  const [activities, setActivities] = useState<{ name: string; activity: string; reasoning: string }[]>([])
+
+  // ── Agent panel split state ──────────────────────────────────────────────
+  const [panelOpen, setPanelOpen] = useState(false)
+
+  const fetchAgents = useCallback(() => {
+    supabase.from("agents").select("*").then(({ data }) => {
+      if (!data || data.length === 0) return
+      const mapped: Agent[] = data.map((row, i) => {
+        const startIdx = i % ZONES.length
+        const startZone = ZONES[startIdx]
+        const endZone = ZONES[(i + 1 + Math.floor(i / ZONES.length)) % ZONES.length]
+        return {
+          id: row.id,
+          name: row.name,
+          color: COLORS[i % COLORS.length],
+          personality: row.personality || "",
+          config: row.profile_pic || genConfig(),
+          start: randomInZone(startZone),
+          end: randomInZone(endZone),
+          zone: startZone[3],
+          destZone: endZone[3],
+          zoneIndex: startIdx,
+          job_description: row.job_description,
+          age: row.age,
+          location_home: row.location_home,
+          location_work: row.location_work,
+        }
+      })
+      setAgents(mapped)
+      agentsRef.current = mapped
+    })
+  }, [])
+
+  useEffect(() => { fetchAgents() }, [fetchAgents])
+
+  // Resize map when panel opens/closes (after CSS transition completes)
+  useEffect(() => {
+    const t = setTimeout(() => { mapRef.current?.resize() }, 310)
+    return () => clearTimeout(t)
+  }, [panelOpen])
+
+  useEffect(() => { speedRef.current = 200 / speed }, [speed])
+
+  useEffect(() => {
+    const map = new mapboxgl.Map({
+      container: mapContainer.current!,
+      accessToken: TOKEN,
+      style: STYLES[style],
+      center: SEATTLE_CENTER,
+      zoom: 12,
+      minZoom: 9,
+      maxZoom: 22,
+      maxBounds: SEATTLE_BOUNDS,
+      pitch: 0,
+      bearing: 0,
+      dragRotate: true,
+      touchPitch: true,
+      touchZoomRotate: true,
+      attributionControl: false,
+    })
+    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true, showCompass: false }), "bottom-right")
+    mapRef.current = map
+
+    map.on("click", "agents-dot", (e) => {
+      const idx = e.features?.[0]?.properties?.agentIndex
+      if (idx !== undefined && idx !== null) {
+        setSelectedAgent(agentsRef.current[idx])
+        followingIndexRef.current = idx
+        setFollowingIndex(idx)
+        followTargetRef.current = { zoom: 16.5, pitch: 55 }
+        enable3D(map)
+        const pos = positionsRef.current[idx] ?? agentsRef.current[idx]?.start
+        if (pos) {
+          map.flyTo({ center: pos, zoom: 16.5, pitch: 55, bearing: map.getBearing(), speed: 1.1, curve: 1.4, essential: true })
+        }
+      }
+    })
+    map.on("mouseenter", "agents-dot", () => { map.getCanvas().style.cursor = "pointer" })
+    map.on("mouseleave", "agents-dot", () => { map.getCanvas().style.cursor = "" })
+
+    return () => {
+      timersRef.current.forEach(clearTimeout)
+      map.remove()
+    }
+  }, [style])
+
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date()
+      const pad = (n: number) => n.toString().padStart(2, "0")
+      setTime(\`\${pad(d.getHours())}:\${pad(d.getMinutes())}:\${pad(d.getSeconds())}\`)
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    if (!agentRunning) return
+    const interval = setInterval(() => {
+      simTimeRef.current = new Date(simTimeRef.current.getTime() + 5 * 60 * 1000 * speed)
+      const h = simTimeRef.current.getHours()
+      const m = simTimeRef.current.getMinutes()
+      const ampm = h >= 12 ? "PM" : "AM"
+      const h12 = h % 12 || 12
+      setSimTime(\`\${h12.toString().padStart(2, "0")}:\${m.toString().padStart(2, "0")} \${ampm}\`)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [agentRunning, speed])
+
+  const updateRouteSource = useCallback(() => {
+    const map = mapRef.current
+    if (!map || !map.getSource("all-routes")) return
+    const features = activeRoutesRef.current.filter(Boolean) as GeoJSON.Feature[]
+    ;(map.getSource("all-routes") as mapboxgl.GeoJSONSource).setData({ type: "FeatureCollection", features })
+  }, [])
+
+  const cycleAgent = useCallback(async (agentIdx: number) => {
+    const map = mapRef.current
+    const currentAgents = agentsRef.current
+    if (!map || !runningRef.current || !currentAgents[agentIdx]) return
+
+    const agent = currentAgents[agentIdx]
+    const currentPos = positionsRef.current[agentIdx] || agent.start
+
+    const decision = await thinkAgent(agent, agent.zone, (agentMemoriesRef.current[agent.id] || []).map(a => ({ activity: a })), simTimeRef.current)
+    if (!decision || !runningRef.current) return
+
+    if (!agentMemoriesRef.current[agent.id]) agentMemoriesRef.current[agent.id] = []
+    agentMemoriesRef.current[agent.id] = [...agentMemoriesRef.current[agent.id], decision.activity].slice(-5)
+
+    const durationMin = Math.min(decision.duration_minutes || 5, 60)
+    const speed = 200 / (speedRef.current || 200)
+    const stayDuration = Math.min((durationMin * 1000) / (speed * 10), 5000)
+
+    setActivities((prev) => {
+      let actText = decision.activity || ""
+      if (actText.includes('"activity"') || actText.startsWith("{") || actText.startsWith("\`\`\`")) {
+        try {
+          const cleaned = actText.replace(/\`\`\`json\\s*/g, "").replace(/\`\`\`/g, "").trim()
+          const parsed = JSON.parse(cleaned.match(/\\{[\\s\\S]*\\}/)?.[0] || "{}")
+          actText = parsed.activity || actText
+        } catch { /* keep original */ }
+      }
+      return [{ name: agent.name, activity: \`\${actText} (\${durationMin}min)\`, reasoning: decision.reasoning || "" }, ...prev].slice(0, 50)
+    })
+
+    const dest = await geocode(decision.destination)
+    const end = dest || agent.end
+    const route = await fetchRoute(currentPos, end)
+    if (!route || !runningRef.current) {
+      const t = setTimeout(() => cycleAgent(agentIdx), 5000)
+      timersRef.current.push(t)
+      return
+    }
+
+    if (map && map.getSource("all-routes")) {
+      const feature: GeoJSON.Feature = {
+        type: "Feature",
+        properties: { color: agent.color, agentId: agent.id },
+        geometry: { type: "LineString", coordinates: route },
+      }
+      activeRoutesRef.current[agentIdx] = feature
+      updateRouteSource()
+    }
+
+    const smooth = interpolateRoute(route, 3)
+    let i = 0
+    const step = () => {
+      if (!runningRef.current) return
+      if (i >= smooth.length) {
+        positionsRef.current[agentIdx] = smooth[smooth.length - 1]
+        activeRoutesRef.current[agentIdx] = null
+        updateRouteSource()
+        const t = setTimeout(() => cycleAgent(agentIdx), stayDuration)
+        timersRef.current.push(t)
+        return
+      }
+      positionsRef.current[agentIdx] = smooth[i]
+
+      if (followingIndexRef.current === agentIdx && mapRef.current) {
+        const map = mapRef.current
+        const here = smooth[i]
+        const ahead = smooth[Math.min(smooth.length - 1, i + 12)]
+        const dx = ahead[0] - here[0]
+        const dy = ahead[1] - here[1]
+        let desiredBearing = map.getBearing()
+        if (dx * dx + dy * dy > 1e-12) {
+          desiredBearing = (Math.atan2(dx, dy) * 180) / Math.PI
+        }
+        const current = map.getBearing()
+        const delta = ((desiredBearing - current + 540) % 360) - 180
+        const bearing = current + delta * 0.18
+        const target = followTargetRef.current
+        map.easeTo({ center: here, zoom: target.zoom, pitch: target.pitch, bearing, duration: speedRef.current * 3, easing: (t) => t * (2 - t), essential: true })
+      }
+
+      i++
+      const t = setTimeout(step, speedRef.current)
+      timersRef.current.push(t)
+    }
+    step()
+  }, [updateRouteSource])
+
+  useEffect(() => {
+    if (!agentRunning || !runningRef.current) return
+    let prev: [number, number][] = positionsRef.current.map((p) => [p[0], p[1]])
+    const interval = setInterval(() => {
+      const map = mapRef.current
+      const currentAgents = agentsRef.current
+      if (!map || !map.getSource("agents-src") || currentAgents.length === 0) return
+      const collection: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: positionsRef.current.map((pos, i) => ({
+          type: "Feature" as const,
+          properties: { agentIndex: i, color: currentAgents[i]?.color || "#fff" },
+          geometry: { type: "Point" as const, coordinates: pos },
+        })),
+      };
+      (map.getSource("agents-src") as mapboxgl.GeoJSONSource).setData(collection)
+
+      const frame: TimelineFrame = { total: 0, perAgent: {} }
+      for (let i = 0; i < currentAgents.length; i++) {
+        const a = currentAgents[i]
+        const cur = positionsRef.current[i]
+        const old = prev[i]
+        if (cur && old) {
+          const dx = cur[0] - old[0]
+          const dy = cur[1] - old[1]
+          const d = Math.sqrt(dx * dx + dy * dy)
+          frame.perAgent[a.id] = d
+          frame.total += d
+        } else {
+          frame.perAgent[a.id] = 0
+        }
+      }
+      prev = positionsRef.current.map((p) => [p[0], p[1]])
+      const next = framesRef.current.length >= MAX_FRAMES
+        ? [...framesRef.current.slice(framesRef.current.length - MAX_FRAMES + 1), frame]
+        : [...framesRef.current, frame]
+      framesRef.current = next
+      setFrames(next)
+    }, 33)
+    return () => clearInterval(interval)
+  }, [agentRunning])
+
+  const stopAgents = useCallback(() => {
+    runningRef.current = false
+    timersRef.current.forEach(clearTimeout)
+    timersRef.current = []
+    setAgentRunning(false)
+  }, [])
+
+  const startAgents = useCallback(async () => {
+    const map = mapRef.current
+    const currentAgents = agentsRef.current
+    if (!map || currentAgents.length === 0) return
+
+    setAgentRunning(true)
+    runningRef.current = true
+    setActivities([])
+    framesRef.current = []
+    setFrames([])
+    timersRef.current.forEach(clearTimeout)
+    timersRef.current = []
+
+    positionsRef.current = currentAgents.map((a) => a.start)
+
+    const collection: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: currentAgents.map((a, i) => ({
+        type: "Feature" as const,
+        properties: { agentIndex: i, color: a.color },
+        geometry: { type: "Point" as const, coordinates: a.start },
+      })),
+    }
+
+    if (map.getSource("agents-src")) {
+      (map.getSource("agents-src") as mapboxgl.GeoJSONSource).setData(collection)
+    } else {
+      map.addSource("agents-src", { type: "geojson", data: collection })
+      map.addLayer({
+        id: "agents-glow", type: "circle", source: "agents-src",
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 10, 17, 20, 21, 40],
+          "circle-color": ["get", "color"], "circle-opacity": 0.2, "circle-blur": 1,
+        },
+      })
+      map.addLayer({
+        id: "agents-dot", type: "circle", source: "agents-src",
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 5, 17, 10, 21, 20],
+          "circle-color": ["get", "color"], "circle-stroke-width": 1.5, "circle-stroke-color": "#fff",
+        },
+      })
+    }
+
+    if (!map.getSource("all-routes")) {
+      map.addSource("all-routes", { type: "geojson", data: { type: "FeatureCollection", features: [] } })
+      map.addLayer({
+        id: "all-routes-line", type: "line", source: "all-routes",
+        paint: { "line-color": ["get", "color"], "line-width": 2, "line-opacity": 0.4, "line-dasharray": [2, 2] },
+      })
+    }
+
+    currentAgents.forEach((_, i) => {
+      const delay = i * 800
+      const t = setTimeout(() => cycleAgent(i), delay)
+      timersRef.current.push(t)
+    })
+  }, [cycleAgent])
+
+  const enable3D = useCallback((map: mapboxgl.Map) => {
+    map.easeTo({ pitch: 55, bearing: 0 })
+    map.once("idle", () => {
+      if (!map.getLayer("3d-buildings")) {
+        if (!map.getSource("composite")) {
+          map.addSource("composite", { type: "vector", url: "mapbox://mapbox.mapbox-streets-v8" })
+        }
+        map.addLayer({
+          id: "3d-buildings", source: "composite", "source-layer": "building",
+          type: "fill-extrusion", minzoom: 14,
+          paint: {
+            "fill-extrusion-color": "#aaa",
+            "fill-extrusion-height": ["get", "height"],
+            "fill-extrusion-base": ["get", "min_height"],
+            "fill-extrusion-opacity": 0.6,
+          },
+        })
+      }
+    })
+    setIs3D(true)
+  }, [])
+
+  const disable3D = useCallback((map: mapboxgl.Map) => {
+    map.easeTo({ pitch: 0, bearing: 0 })
+    if (map.getLayer("3d-buildings")) map.removeLayer("3d-buildings")
+    setIs3D(false)
+  }, [])
+
+  const toggle3D = () => {
+    const map = mapRef.current
+    if (!map) return
+    if (is3D) disable3D(map)
+    else enable3D(map)
+  }
+
+  const stopFollowing = useCallback(() => {
+    followingIndexRef.current = null
+    setFollowingIndex(null)
+  }, [])
+
+  const closeProfile = useCallback(() => {
+    setSelectedAgent(null)
+    stopFollowing()
+  }, [stopFollowing])
+
+  const resetView = () => {
+    stopFollowing()
+    setSelectedAgent(null)
+    mapRef.current?.flyTo({ center: SEATTLE_CENTER, zoom: 12, pitch: 0, bearing: 0 })
+    if (mapRef.current?.getLayer("3d-buildings")) mapRef.current.removeLayer("3d-buildings")
+    setIs3D(false)
+  }
+
+  return (
+    <div className="flex h-svh w-full flex-1 flex-col overflow-hidden bg-background text-foreground">
+      {/* ── Main area: map + optional agent panel ── */}
+      <div className="flex min-h-0 flex-1">
+
+        {/* Map section — shrinks to 60% when panel is open */}
+        <div className={cn(
+          "relative transition-all duration-300 ease-out",
+          panelOpen ? "w-[60%]" : "w-full",
+        )}>
+          <div ref={mapContainer} className="absolute inset-0 h-full w-full" />
+
+          {/* Top-left: clock */}
+          <div className="absolute left-4 top-4 z-20 flex items-center gap-3">
+            <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/80 px-3 py-1.5 backdrop-blur">
+              <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_0_var(--color-emerald-400,#34d399)]" />
+              <span className="font-mono text-xs tracking-[0.18em] text-foreground tabular-nums">{agentRunning ? simTime : time}</span>
+            </div>
+            <span className="hidden text-[10px] uppercase tracking-[0.2em] text-muted-foreground sm:inline">
+              {agents.length} Agents · {ZONES.length} Zones
+            </span>
+          </div>
+
+          {/* Top-center: map controls */}
+          <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2">
+            <div className="flex items-center gap-1 rounded-md border border-border/60 bg-card/80 p-1 backdrop-blur">
+              {(Object.keys(STYLES) as StyleKey[]).map((s) => (
+                <button key={s} type="button" onClick={() => setStyle(s)}
+                  className={cn("rounded-sm px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] transition",
+                    style === s ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                  )}>{s}</button>
+              ))}
+              <div className="mx-1 h-4 w-px bg-border/60" />
+              <button type="button" onClick={toggle3D} aria-pressed={is3D}
+                className={cn("flex items-center gap-1 rounded-sm px-2 py-1 text-[10px] uppercase tracking-[0.18em] transition",
+                  is3D ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                )}><Cube size={12} weight={is3D ? "fill" : "regular"} /> 3D</button>
+              <button type="button" onClick={resetView}
+                className="flex items-center rounded-sm px-2 py-1 text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
+                aria-label="Reset view"><ArrowsCounterClockwise size={12} /></button>
+            </div>
+          </div>
+
+          {/* Top-right: launch + activity + agent panel toggle */}
+          <div className="absolute right-4 top-4 z-30 flex items-center gap-2">
+            <button type="button" onClick={agentRunning ? stopAgents : startAgents}
+              disabled={!agentRunning && (loadingRoutes || agents.length === 0)}
+              className={cn(
+                "flex items-center gap-2 rounded-md border border-border/60 bg-card/80 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition",
+                !agentRunning && (loadingRoutes || agents.length === 0) ? "cursor-not-allowed text-muted-foreground/50" : "text-foreground hover:bg-card"
+              )}>
+              <Play size={12} weight={agentRunning ? "regular" : "fill"} />
+              {loadingRoutes ? "Loading." : agentRunning ? "Stop" : agents.length === 0 ? "No Agents" : "Launch"}
+            </button>
+            <button type="button" onClick={() => setActivityOpen((o) => !o)} aria-pressed={activityOpen}
+              className={cn("flex items-center gap-2 rounded-md border border-border/60 bg-card/80 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition",
+                activityOpen ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}><WaveSine size={12} /> Activity</button>
+
+            {/* ── Hamburger: toggle agent creation panel ── */}
+            <button
+              type="button"
+              onClick={() => setPanelOpen((o) => !o)}
+              aria-pressed={panelOpen}
+              aria-label="Toggle agent panel"
+              className={cn(
+                "flex items-center gap-2 rounded-md border border-border/60 bg-card/80 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition",
+                panelOpen ? "border-foreground/40 text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <List size={12} weight={panelOpen ? "fill" : "regular"} />
+              Agents
+            </button>
+          </div>
+
+          {/* Right rail: activity stream + agent profile */}
+          <aside
+            className="absolute bottom-4 right-4 top-14 z-10 flex w-72 flex-col gap-2"
+            aria-hidden={!activityOpen && !selectedAgent}
+          >
+            <div className={cn(
+              "flex flex-col overflow-hidden rounded-md border border-border/60 bg-card/85 backdrop-blur transition-all duration-200 ease-out",
+              activityOpen ? "translate-x-0 opacity-100" : "pointer-events-none translate-x-4 opacity-0",
+              selectedAgent ? "h-44 flex-none" : "flex-1 min-h-0",
+            )}>
+              <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
+                <span className="text-[10px] uppercase tracking-[0.18em] text-foreground">Activity Stream</span>
+                <WaveSine size={12} className="text-muted-foreground" />
+              </div>
+              <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+                {activities.length === 0 ? (
+                  <div className="flex flex-1 flex-col items-center justify-center gap-1">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">No activity</p>
+                    <p className="text-[10px] text-muted-foreground/70">Launch agents to see decisions.</p>
+                  </div>
+                ) : (
+                  activities.map((a, i) => (
+                    <div key={i} className="rounded border border-border/40 px-2.5 py-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-medium text-foreground">{a.name}</p>
+                      </div>
+                      <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">{a.activity}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {selectedAgent && (
+              <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-md border border-border/60 bg-card/95 backdrop-blur animate-in fade-in slide-in-from-right-2 duration-200">
+                <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-foreground">Unit Profile</span>
+                  <div className="flex items-center gap-1">
+                    <button type="button"
+                      onClick={() => {
+                        const map = mapRef.current
+                        const idx = followingIndexRef.current
+                        if (map && idx !== null && positionsRef.current[idx]) {
+                          followTargetRef.current = { zoom: 16.5, pitch: 55 }
+                          map.flyTo({ center: positionsRef.current[idx], zoom: 16.5, pitch: 55, speed: 1.1, curve: 1.4, essential: true })
+                        }
+                      }}
+                      className={cn("rounded-sm p-1 transition", followingIndex !== null ? "text-emerald-400 hover:bg-secondary/60" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground")}
+                      aria-label="Recenter on unit" title="Recenter">
+                      <Crosshair size={12} weight={followingIndex !== null ? "fill" : "regular"} />
+                    </button>
+                    <button type="button" onClick={closeProfile}
+                      className="rounded-sm p-1 text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
+                      aria-label="Close profile">
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 border-b border-border/60 px-3 py-3">
+                  <div className="size-12 shrink-0 overflow-hidden rounded-full border-2" style={{ borderColor: selectedAgent.color + "66" }}>
+                    <Avatar style={{ width: "100%", height: "100%" }} {...selectedAgent.config} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-semibold text-foreground">{selectedAgent.name}</h3>
+                    <span className="mt-0.5 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-emerald-400">
+                      <span className="inline-block size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_0_var(--color-emerald-400,#34d399)]" />
+                      {followingIndex !== null ? "Tracking" : "Active"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto">
+                  <DiagRow label="Target" value={\`\${selectedAgent.name.split(" ")[0].toUpperCase()}[\${zoneCode(selectedAgent.zone)}]\`} accentColor={selectedAgent.color} />
+                  <DiagRow label="Zone" value={\`\${zoneCode(selectedAgent.zone)}  →  \${zoneCode(selectedAgent.destZone)}\`} />
+                  <DiagRow label="Status" value={agentRunning ? "Walking" : "Idle"} />
+                  {selectedAgent.age != null && <DiagRow label="Age" value={String(selectedAgent.age)} />}
+                  {selectedAgent.location_home && <DiagRow label="Home" value={selectedAgent.location_home} />}
+                  {selectedAgent.location_work && <DiagRow label="Work" value={selectedAgent.location_work} />}
+
+                  {selectedAgent.personality && (
+                    <div className="border-t border-border/60 px-3 py-3">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Personality</div>
+                      <p className="mt-2 text-xs leading-relaxed text-foreground/85">{selectedAgent.personality}</p>
+                    </div>
+                  )}
+                  {selectedAgent.job_description && (
+                    <div className="border-t border-border/60 px-3 py-3">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Job</div>
+                      <p className="mt-2 text-xs leading-relaxed text-foreground/85">{selectedAgent.job_description}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
+
+        {/* ── Agent Creation Panel — 40% when open ── */}
+        <div className={cn(
+          "shrink-0 overflow-hidden transition-all duration-300 ease-out",
+          panelOpen ? "w-[40%]" : "w-0",
+        )}>
+          {panelOpen && (
+            <AgentCreationPanel
+              onClose={() => setPanelOpen(false)}
+              onCreated={fetchAgents}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Bottom: timeline drawer */}
+      <div className="shrink-0 border-t border-border/60 bg-card/85 backdrop-blur">
+        <div className="flex items-center justify-between px-4 py-2">
+          <button type="button" onClick={() => setTimelineOpen((o) => !o)} aria-expanded={timelineOpen}
+            className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition hover:text-foreground">
+            <span>Timeline</span>
+            {timelineOpen ? <CaretDown size={12} /> : <CaretUp size={12} />}
+          </button>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Speed</span>
+            <input type="range" min={0.25} max={5} step={0.25} value={speed}
+              onChange={(e) => setSpeed(parseFloat(e.target.value))}
+              className="h-1 w-24 cursor-pointer accent-foreground" />
+            <span className="font-mono text-[10px] tabular-nums text-foreground">{speed.toFixed(2)}x</span>
+          </div>
+        </div>
+        <div className={cn("overflow-hidden transition-[max-height] duration-300 ease-out", timelineOpen ? "max-h-64" : "max-h-0")}>
+          <div className="border-t border-border/60 px-4 py-4">
+            <TimelineChart
+              frames={frames}
+              selectedAgent={selectedAgent}
+              totalAgents={agents.length}
+              running={agentRunning}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const ZONE_NAME_TO_CODE: Record<string, string> = {
+  "Downtown Seattle": "DOWN",
+  "South Lake Union": "SLU",
+  Bellevue: "BELL",
+  Redmond: "RED",
+  Sammamish: "SAMM",
+}
+
+function zoneCode(zoneName: string): string {
+  return ZONE_NAME_TO_CODE[zoneName] ?? zoneName.slice(0, 4).toUpperCase()
+}
+
+function DiagRow({ label, value, accentColor }: { label: string; value: string; accentColor?: string }) {
+  return (
+    <div className="flex items-center justify-between border-t border-border/60 px-3 py-2 first:border-t-0">
+      <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</span>
+      <span className="font-mono text-[11px] tracking-tight text-foreground" style={accentColor ? { color: accentColor } : undefined}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function TimelineChart({ frames, selectedAgent, totalAgents, running }: {
+  frames: TimelineFrame[]
+  selectedAgent: Agent | null
+  totalAgents: number
+  running: boolean
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState({ w: 800, h: 192 })
+  const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
+
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+    const update = () => setSize({ w: el.clientWidth, h: el.clientHeight })
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const padL = 16; const padR = 16; const padT = 14; const padB = 22
+  const W = Math.max(320, size.w); const H = Math.max(140, size.h)
+  const innerW = Math.max(10, W - padL - padR); const innerH = Math.max(10, H - padT - padB)
+
+  const smooth = (vals: number[], win: number) => {
+    if (vals.length === 0) return vals
+    const half = Math.floor(win / 2)
+    return vals.map((_, i) => {
+      const a = Math.max(0, i - half); const b = Math.min(vals.length - 1, i + half)
+      let s = 0; for (let k = a; k <= b; k++) s += vals[k]
+      return s / (b - a + 1)
+    })
+  }
+
+  const popRaw = frames.map((f) => (totalAgents > 0 ? f.total / totalAgents : 0))
+  const pop = smooth(popRaw, 7)
+  const agentRaw = selectedAgent ? frames.map((f) => f.perAgent[selectedAgent.id] ?? 0) : []
+  const agent = smooth(agentRaw, 7)
+  const maxV = Math.max(1e-12, ...pop, ...agent)
+  const xStep = frames.length > 1 ? innerW / (frames.length - 1) : innerW
+  const xAt = (i: number) => padL + i * xStep
+  const yAt = (v: number) => padT + innerH - (v / maxV) * innerH * 0.92
+
+  const buildSmoothPath = (values: number[]) => {
+    if (values.length === 0) return ""
+    if (values.length === 1) return \`M\${xAt(0)},\${yAt(values[0])}\`
+    const pts = values.map((v, i) => [xAt(i), yAt(v)] as const)
+    let d = \`M\${pts[0][0]},\${pts[0][1]}\`
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] ?? pts[i]; const p1 = pts[i]; const p2 = pts[i + 1]; const p3 = pts[i + 2] ?? p2
+      const c1x = p1[0] + (p2[0] - p0[0]) / 6; const c1y = p1[1] + (p2[1] - p0[1]) / 6
+      const c2x = p2[0] - (p3[0] - p1[0]) / 6; const c2y = p2[1] - (p3[1] - p1[1]) / 6
+      d += \` C\${c1x},\${c1y} \${c2x},\${c2y} \${p2[0]},\${p2[1]}\`
+    }
+    return d
+  }
+
+  const closeArea = (linePath: string) => {
+    if (!linePath || frames.length === 0) return ""
+    return \`\${linePath} L\${xAt(frames.length - 1)},\${padT + innerH} L\${xAt(0)},\${padT + innerH} Z\`
+  }
+
+  const popLine = buildSmoothPath(pop); const popArea = closeArea(popLine)
+  const agentLine = selectedAgent ? buildSmoothPath(agent) : ""; const agentArea = closeArea(agentLine)
+  const focused = !!selectedAgent
+  const popStroke = focused ? AGENT_BACKDROP_COLOR : PULSE_COLOR
+  const popFillId = focused ? "grad-pop-dim" : "grad-pop"
+  const gridYs = [0, 0.25, 0.5, 0.75, 1].map((p) => padT + innerH * p)
+  const hoverIdx = hover ? hover.idx : -1
+  const hoverPop = hoverIdx >= 0 ? pop[hoverIdx] ?? 0 : 0
+  const hoverAgent = hoverIdx >= 0 && selectedAgent ? agent[hoverIdx] ?? 0 : 0
+  const hoverPopPct = (hoverPop / maxV) * 100; const hoverAgentPct = (hoverAgent / maxV) * 100
+
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (frames.length === 0) return
+    const r = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - r.left
+    if (x < padL - 4 || x > padL + innerW + 4) { setHover(null); return }
+    const rel = Math.min(innerW, Math.max(0, x - padL))
+    const idx = frames.length > 1 ? Math.round(rel / xStep) : 0
+    setHover({ idx, x: xAt(idx), y: e.clientY - r.top })
+  }
+
+  return (
+    <div ref={wrapRef} className="relative h-48 w-full overflow-hidden rounded-md border border-border/60 bg-[#0a0a0c]/70"
+      onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+      <svg width={W} height={H} className="absolute inset-0 block">
+        <defs>
+          <linearGradient id="grad-pop" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={PULSE_COLOR} stopOpacity={0.55} />
+            <stop offset="100%" stopColor={PULSE_COLOR} stopOpacity={0.04} />
+          </linearGradient>
+          <linearGradient id="grad-pop-dim" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={AGENT_BACKDROP_COLOR} stopOpacity={0.35} />
+            <stop offset="100%" stopColor={AGENT_BACKDROP_COLOR} stopOpacity={0.03} />
+          </linearGradient>
+          {selectedAgent && (
+            <linearGradient id="grad-agent" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={selectedAgent.color} stopOpacity={0.9} />
+              <stop offset="100%" stopColor={selectedAgent.color} stopOpacity={0.1} />
+            </linearGradient>
+          )}
+          <filter id="glow-agent" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.5" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        {gridYs.map((y, i) => <line key={i} x1={padL} x2={W - padR} y1={y} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth={1} />)}
+        {popArea && <path d={popArea} fill={\`url(#\${popFillId})\`} stroke="none" />}
+        {popLine && <path d={popLine} fill="none" stroke={popStroke} strokeOpacity={focused ? 0.55 : 0.95} strokeWidth={focused ? 1 : 1.5} strokeLinejoin="round" strokeLinecap="round" />}
+        {selectedAgent && agentArea && (
+          <>
+            <path d={agentArea} fill="url(#grad-agent)" stroke="none" />
+            <path d={agentLine} fill="none" stroke={selectedAgent.color} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" filter="url(#glow-agent)" />
+          </>
+        )}
+        {hover && (
+          <g>
+            <line x1={hover.x} x2={hover.x} y1={padT} y2={padT + innerH} stroke="rgba(255,255,255,0.4)" strokeWidth={1} strokeDasharray="3 3" />
+            {selectedAgent && <circle cx={hover.x} cy={yAt(hoverAgent)} r={3.5} fill="#0a0a0c" stroke={selectedAgent.color} strokeWidth={1.5} />}
+            <circle cx={hover.x} cy={yAt(hoverPop)} r={3.5} fill="#0a0a0c" stroke={focused ? "rgba(255,255,255,0.65)" : PULSE_COLOR} strokeWidth={1.5} />
+          </g>
+        )}
+      </svg>
+
+      <div className="pointer-events-none absolute bottom-2 left-4 right-4 flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground/70">
+        <span>Earlier</span>
+        <span>City Movement · Last {frames.length} ticks</span>
+        <span>Now</span>
+      </div>
+
+      {hover && (
+        <div className="pointer-events-none absolute z-10 rounded-sm border border-border/70 bg-[#0a0a0c]/95 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] shadow-xl backdrop-blur"
+          style={{ left: Math.min(hover.x + 12, W - 170), top: Math.max(padT, Math.min(yAt(hoverPop), yAt(hoverAgent)) - 36) }}>
+          {selectedAgent ? (
+            <>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: selectedAgent.color }} />
+                <span className="text-foreground tabular-nums">{hoverAgentPct.toFixed(1)}%</span>
+                <span className="text-muted-foreground">{selectedAgent.name}</span>
+              </div>
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: AGENT_BACKDROP_COLOR }} />
+                <span className="text-foreground/70 tabular-nums">{hoverPopPct.toFixed(1)}%</span>
+                <span className="text-muted-foreground">City Avg</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-muted-foreground">City Movement</div>
+              <div className="mt-0.5 text-foreground tabular-nums">{hoverPopPct.toFixed(1)}%</div>
+            </>
+          )}
+        </div>
+      )}
+
+      {frames.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            {running ? "Awaiting telemetry." : "Press launch to begin telemetry"}
+          </span>
+        </div>
+      )}
+
+      <div className="pointer-events-none absolute left-3 top-2 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em]">
+        {selectedAgent ? (
+          <>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: selectedAgent.color }} />
+              <span className="text-foreground">{selectedAgent.name}</span>
+            </span>
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: AGENT_BACKDROP_COLOR }} />
+              City Avg
+            </span>
+          </>
+        ) : (
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: PULSE_COLOR }} />
+            <span className="text-foreground">City Movement</span>
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+`;
+
+// ---------------------------------------------------------------------------
+// GitHub operations
+// ---------------------------------------------------------------------------
+async function run() {
+  console.log("\nCreating branch:", BRANCH);
+
+  // 1. Get main SHA
+  const mainRef = await api("git/ref/heads/main");
+  const mainSha = mainRef.object.sha;
+
+  // 2. Create branch
+  try {
+    await api("git/refs", "POST", { ref: `refs/heads/${BRANCH}`, sha: mainSha });
+    console.log("  ✓ Branch created");
+  } catch (e) {
+    if (e.message.includes("422")) {
+      console.log("  ℹ Branch already exists, continuing");
+    } else throw e;
+  }
+
+  // 3. Upload new component
+  console.log("\nUploading files…");
+  const panelCheck = await fetch(
+    `https://api.github.com/repos/${REPO}/contents/web/components/agent-creation-panel.tsx?ref=${BRANCH}`,
+    { headers: { Authorization: `Bearer ${TOKEN}`, "User-Agent": "sea-agent-dashboard" } }
+  );
+  const panelSha = panelCheck.ok ? (await panelCheck.json()).sha : undefined;
+
+  const r1 = await fetch(`https://api.github.com/repos/${REPO}/contents/web/components/agent-creation-panel.tsx`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${TOKEN}`, "Content-Type": "application/json", "User-Agent": "sea-agent-dashboard" },
+    body: JSON.stringify({
+      message: "feat: add AgentCreationPanel component",
+      content: b64(AGENT_PANEL),
+      branch: BRANCH,
+      ...(panelSha ? { sha: panelSha } : {}),
+    }),
+  });
+  if (!r1.ok) throw new Error(`Panel upload failed: ${await r1.text()}`);
+  console.log("  ✓ web/components/agent-creation-panel.tsx");
+
+  // 4. Upload modified map page
+  const mapCheck = await fetch(
+    `https://api.github.com/repos/${REPO}/contents/web/app/map/page.tsx?ref=${BRANCH}`,
+    { headers: { Authorization: `Bearer ${TOKEN}`, "User-Agent": "sea-agent-dashboard" } }
+  );
+  const mapSha = mapCheck.ok ? (await mapCheck.json()).sha : undefined;
+
+  const r2 = await fetch(`https://api.github.com/repos/${REPO}/contents/web/app/map/page.tsx`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${TOKEN}`, "Content-Type": "application/json", "User-Agent": "sea-agent-dashboard" },
+    body: JSON.stringify({
+      message: "feat: split map 60/40 with hamburger agent creation panel",
+      content: b64(MAP_PAGE),
+      branch: BRANCH,
+      ...(mapSha ? { sha: mapSha } : {}),
+    }),
+  });
+  if (!r2.ok) throw new Error(`Map upload failed: ${await r2.text()}`);
+  console.log("  ✓ web/app/map/page.tsx");
+
+  // 5. Open PR
+  console.log("\nOpening pull request…");
+  const pr = await api("pulls", "POST", {
+    title: "feat: hamburger split-view — 60% map / 40% agent creation panel",
+    head: BRANCH,
+    base: BASE,
+    body: `## Summary
+
+- Adds a **hamburger \`Agents\` button** to the top-right map controls (matches existing button style exactly)
+- Clicking it slides in a **40% agent creation panel** from the right; the map shrinks to **60%** with a 300ms CSS transition
+- Calls \`mapRef.current?.resize()\` after the transition so Mapbox tiles re-fill correctly
+- Panel closes via the × button in its header or by clicking the toggle again
+
+## AgentCreationPanel (\`web/components/agent-creation-panel.tsx\`)
+
+- **Quick Load** strip — one-click fills the form with any of the 5 prebuilt Seattle agents (Charlie, Anna, Connor, Valeria, Lily) from the pseudo_agents CSVs
+- Compact scrollable form: Name, Age, Job Description, Home Location, Work Location, Personality
+- Randomisable avatar (react-nice-avatar, already a project dependency)
+- On submit → inserts to Supabase \`agents\` table → calls \`onCreated()\` which re-fetches agents on the map
+- Success state (2 s) then auto-resets the form
+
+## Design
+
+Pixel-matches the existing dark terminal aesthetic:  
+\`text-[10px] uppercase tracking-[0.18em]\`, \`backdrop-blur\`, \`border-border/60\`, Phosphor icons, JetBrains Mono.
+
+## Files changed
+
+| File | Change |
+|------|--------|
+| \`web/components/agent-creation-panel.tsx\` | New component |
+| \`web/app/map/page.tsx\` | Added \`panelOpen\` state, split flex layout, hamburger button, \`fetchAgents\` extracted so panel can trigger a refresh |
+`,
+  });
+
+  console.log("\n✓ Pull request opened:");
+  console.log(" ", pr.html_url, "\n");
+}
+
+run().catch((e) => { console.error(e); process.exit(1); });

@@ -19,15 +19,23 @@ type DaySummary = {
   beats: BeatSummary[]
 }
 
+type Comparison = {
+  time: string
+  activity: string
+  location: string
+  otherDays: { date: string; day_number: number; activity: string; location: string }[]
+}
+
 type AgentExportPayload = {
   agentId: string
   agentName: string
   days: DaySummary[]
+  comparisons?: Comparison[]
 }
 
 const FOLDER_ID = process.env.BOX_FOLDER_ID ?? "0"
 
-function buildReadableSummary(name: string, days: DaySummary[]): string {
+function buildReadableSummary(name: string, days: DaySummary[], comparisons?: Comparison[]): string {
   let text = `Agent: ${name}\nDays tracked: ${days.length}\n\n`
 
   for (const day of days) {
@@ -47,6 +55,18 @@ function buildReadableSummary(name: string, days: DaySummary[]): string {
     text += `\n`
   }
 
+  if (comparisons && comparisons.length > 0) {
+    text += `\n=== CROSS-DAY COMPARISONS ===\n`
+    text += `(User flagged these time slots for comparison)\n\n`
+    for (const c of comparisons) {
+      text += `At ${c.time}: "${c.activity}" @ ${c.location}\n`
+      for (const od of c.otherDays) {
+        text += `  Day ${od.day_number} (${od.date}): ${od.activity} @ ${od.location}\n`
+      }
+      text += `\n`
+    }
+  }
+
   return text
 }
 
@@ -60,7 +80,7 @@ async function askBoxAI(fileId: string, token: string, agentName: string): Promi
       },
       body: JSON.stringify({
         mode: "single_item_qa",
-        prompt: `Summarize what ${agentName} did across these days. Note any patterns, changes in routine, or unusual behavior. Keep it to 4-6 sentences.`,
+        prompt: `Summarize what ${agentName} did across these days. Note any patterns, changes in routine, or unusual behavior. If there are cross-day comparisons at the end, highlight what changed at those specific times. Keep it to 4-6 sentences.`,
         items: [{ type: "file", id: fileId }],
       }),
     })
@@ -108,7 +128,7 @@ export async function POST(req: NextRequest) {
     }
 
     const exportedAt = new Date().toISOString()
-    const summary = buildReadableSummary(payload.agentName, payload.days)
+    const summary = buildReadableSummary(payload.agentName, payload.days, payload.comparisons)
     const filename = `${payload.agentName.replace(/\s+/g, "-").toLowerCase()}-summary-${exportedAt.replace(/[:.]/g, "-")}.txt`
 
     const token = process.env.BOX_DEVELOPER_TOKEN!

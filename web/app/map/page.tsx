@@ -539,6 +539,18 @@ function DayReplay({
   // Multi-day path history overlay
   const [showHistory, setShowHistory] = useState(false)
 
+  // Cross-day activity comparison: click a beat to see what the agent did at the same time on other days
+  const [compareBeat, setCompareBeat] = useState<Beat | null>(null)
+  const [savedComparisons, setSavedComparisons] = useState<
+    { beat: Beat; otherDays: { date: string; day_number: number; beat: Beat | null }[] }[]
+  >([])
+
+  // Clear comparisons when agent changes
+  useEffect(() => {
+    setCompareBeat(null)
+    setSavedComparisons([])
+  }, [selectedId])
+
   const onCardDragStart = (e: React.PointerEvent<HTMLDivElement>) => {
     // Ignore drags that start on the action buttons.
     if ((e.target as HTMLElement).closest("button")) return
@@ -699,13 +711,16 @@ function DayReplay({
     }
   }, [heatmap])
 
-  // Day change — reset clock, refit. Playback state is intentionally left
-  // untouched: an auto-advance at the end of a day keeps `playing` true so the
-  // next day rolls straight on, while manual day navigation pauses explicitly
-  // via `goToDay` before the day changes.
+  // Day change — refit map. Only reset clock to 0 if auto-advancing (playing).
+  // Manual navigation via goToDay sets its own offset.
+  const manualNavRef = useRef(false)
   useEffect(() => {
-    setOffsetMs(0)
-    offsetRef.current = 0
+    if (manualNavRef.current) {
+      manualNavRef.current = false
+    } else {
+      setOffsetMs(0)
+      offsetRef.current = 0
+    }
     const map = mapRef.current
     if (map && mapLoadedRef.current) fitToDay(map, day)
   }, [day])
@@ -933,9 +948,13 @@ function DayReplay({
   const goToDay = useCallback(
     (i: number) => {
       setPlaying(false)
+      manualNavRef.current = true
       setDayIdx(Math.max(0, Math.min(daysLenRef.current - 1, i)))
+      // Jump to end of day so all beats are visible (user is browsing, not replaying)
+      setOffsetMs(dayLen)
+      offsetRef.current = dayLen
     },
-    [setDayIdx],
+    [setDayIdx, dayLen],
   )
 
   const recenter = useCallback(() => {
@@ -954,6 +973,38 @@ function DayReplay({
       essential: true,
     })
   }, [selectedPlan, dayStartMs])
+
+  // Compare a beat across other days — find what the agent was doing at the same time
+  const handleBeatClick = useCallback((beat: Beat) => {
+    if (!selectedId) return
+    setCompareBeat(beat)
+
+    const beatStart = new Date(beat.start_time)
+    const beatHour = beatStart.getHours()
+    const beatMin = beatStart.getMinutes()
+
+    const otherDays = days
+      .filter((_, di) => di !== dayIdx)
+      .map((d) => {
+        const plan = d.plans.find((p) => p.agent_id === selectedId)
+        if (!plan) return { date: d.sim_date, day_number: d.day_number, beat: null }
+        // Find the beat closest to the same time of day
+        const match = plan.beats.find((b) => {
+          const s = new Date(b.start_time)
+          const e = new Date(b.end_time)
+          const targetMs = new Date(s.getFullYear(), s.getMonth(), s.getDate(), beatHour, beatMin).getTime()
+          return targetMs >= s.getTime() && targetMs <= e.getTime()
+        }) ?? null
+        return { date: d.sim_date, day_number: d.day_number, beat: match }
+      })
+
+    // Auto-save this comparison
+    setSavedComparisons((prev) => {
+      // Don't duplicate
+      if (prev.some((c) => c.beat.index === beat.index && c.beat.start_time === beat.start_time)) return prev
+      return [...prev, { beat, otherDays }]
+    })
+  }, [selectedId, days, dayIdx])
 
   // Export the selected agent's multi-day summary to Box and get AI analysis
   const exportAgent = useCallback(async () => {
@@ -989,6 +1040,17 @@ function DayReplay({
           agentId: selectedPlan.agent_id,
           agentName: selectedPlan.agent_name,
           days: agentPlans,
+          comparisons: savedComparisons.map((c) => ({
+            time: c.beat.start_time,
+            activity: c.beat.activity,
+            location: c.beat.location_name,
+            otherDays: c.otherDays.map((od) => ({
+              date: od.date,
+              day_number: od.day_number,
+              activity: od.beat?.activity ?? "no activity at this time",
+              location: od.beat?.location_name ?? "—",
+            })),
+          })),
         }),
       })
       const data = await res.json()
@@ -1003,7 +1065,7 @@ function DayReplay({
     } finally {
       setAgentExporting(false)
     }
-  }, [selectedPlan, days])
+  }, [selectedPlan, days, savedComparisons])
 
   // Select an agent by id (used by the find box): flag it, fly the camera to
   // its current position, and start following — mirrors clicking its dot.
@@ -1590,38 +1652,76 @@ function DayReplay({
                       )
                       .map((b) => {
                         const isActive = b.index === selInfo?.idx
+                        const isComparing = compareBeat?.index === b.index
                         const color =
                           ACTIVITY_COLORS[b.activity_type] ??
                           ACTIVITY_COLORS.other
                         return (
-                          <li
-                            key={b.index}
-                            className={cn(
-                              "flex gap-2 rounded-sm border px-2 py-1.5 text-[10px] transition",
-                              isActive
-                                ? "border-amber-400/60 bg-amber-500/10"
-                                : "border-transparent",
+                          <li key={b.index}>
+                            <button
+                              type="button"
+                              onClick={() => handleBeatClick(b)}
+                              className={cn(
+                                "flex w-full gap-2 rounded-sm border px-2 py-1.5 text-[10px] text-left transition hover:bg-secondary/30",
+                                isActive
+                                  ? "border-amber-400/60 bg-amber-500/10"
+                                  : isComparing
+                                    ? "border-cyan-400/60 bg-cyan-500/10"
+                                    : "border-transparent",
+                              )}
+                            >
+                              <span className="mt-1 flex flex-col items-center">
+                                <span
+                                  className="size-2 rounded-full"
+                                  style={{ backgroundColor: color }}
+                                />
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="truncate font-medium text-foreground/90">
+                                    {b.location_name}
+                                  </span>
+                                  <span className="shrink-0 font-mono text-[9px] tabular-nums text-muted-foreground/70">
+                                    {fmtTime(b.start_time)}
+                                  </span>
+                                </div>
+                                <div className="truncate text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+                                  {b.activity_type}
+                                </div>
+                              </div>
+                            </button>
+                            {/* Cross-day comparison panel */}
+                            {isComparing && (
+                              <div className="ml-4 mt-1 mb-1 rounded-sm border border-cyan-400/30 bg-cyan-500/5 px-2 py-1.5">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-[9px] uppercase tracking-[0.15em] text-cyan-400/80">Same time, other days</span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setCompareBeat(null) }}
+                                    className="text-[9px] text-muted-foreground hover:text-foreground"
+                                  >✕</button>
+                                </div>
+                                {savedComparisons
+                                  .find((c) => c.beat.index === b.index)
+                                  ?.otherDays.map((od) => (
+                                    <div key={od.date} className="flex items-center gap-2 py-0.5">
+                                      <span className="text-[9px] text-muted-foreground/60 w-10 shrink-0">D{od.day_number}</span>
+                                      {od.beat ? (
+                                        <span className="text-[10px] text-foreground/80 truncate">
+                                          {od.beat.activity} @ {od.beat.location_name}
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] text-muted-foreground/50 italic">nothing at this time</span>
+                                      )}
+                                    </div>
+                                  ))}
+                                {savedComparisons.length > 0 && (
+                                  <div className="mt-1 text-[8px] text-muted-foreground/40">
+                                    {savedComparisons.length} comparison{savedComparisons.length > 1 ? "s" : ""} saved for export
+                                  </div>
+                                )}
+                              </div>
                             )}
-                          >
-                            <span className="mt-1 flex flex-col items-center">
-                              <span
-                                className="size-2 rounded-full"
-                                style={{ backgroundColor: color }}
-                              />
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="truncate font-medium text-foreground/90">
-                                  {b.location_name}
-                                </span>
-                                <span className="shrink-0 font-mono text-[9px] tabular-nums text-muted-foreground/70">
-                                  {fmtTime(b.start_time)}
-                                </span>
-                              </div>
-                              <div className="truncate text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
-                                {b.activity_type}
-                              </div>
-                            </div>
                           </li>
                         )
                       })

@@ -531,6 +531,14 @@ function DayReplay({
     aiSummary: string | null
   } | null>(null)
 
+  // All-agents summary export state
+  const [allExporting, setAllExporting] = useState(false)
+  const [allExportResult, setAllExportResult] = useState<{
+    boxUrl: string
+    fileName: string
+    aiSummary: string | null
+  } | null>(null)
+
   // Clear export result when agent changes
   useEffect(() => {
     setAgentExportResult(null)
@@ -1066,6 +1074,42 @@ function DayReplay({
       setAgentExporting(false)
     }
   }, [selectedPlan, days, savedComparisons])
+
+  // Export all agents' paragraph summaries (diaries) for the current day to Box
+  const exportAll = useCallback(async () => {
+    setAllExporting(true)
+    setAllExportResult(null)
+    try {
+      const summaries = day.plans.map((plan) => ({
+        name: plan.agent_name,
+        diary: plan.diary || "No diary entry.",
+        stops: plan.beats.length,
+        locations: [...new Set(plan.beats.map((b) => b.location_name))].join(", "),
+      }))
+
+      const res = await fetch("/api/export/all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: day.sim_date,
+          day_number: day.day_number,
+          agentCount: day.plans.length,
+          summaries,
+        }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setAllExportResult({
+        boxUrl: data.boxUrl,
+        fileName: data.fileName,
+        aiSummary: data.aiSummary ?? null,
+      })
+    } catch (err) {
+      alert("Export failed: " + (err instanceof Error ? err.message : "Unknown error"))
+    } finally {
+      setAllExporting(false)
+    }
+  }, [day])
 
   // Select an agent by id (used by the find box): flag it, fly the camera to
   // its current position, and start following — mirrors clicking its dot.
@@ -1782,6 +1826,26 @@ function DayReplay({
 
       {/* BOTTOM: city-activity graph drawer */}
       <div className="shrink-0 border-t border-border/60 bg-card/85 backdrop-blur">
+
+        {/* All-agents export result toast */}
+        {allExportResult && (
+          <div className="border-b border-border/60 px-3 py-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_0_rgb(52,211,153)]" />
+                <span className="text-[10px] uppercase tracking-[0.18em] text-foreground">All Agents Summary</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <a href={allExportResult.boxUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground underline underline-offset-2 hover:text-foreground">View</a>
+                <button type="button" onClick={() => setAllExportResult(null)} className="rounded p-0.5 text-muted-foreground hover:text-foreground" aria-label="Dismiss"><X size={10} /></button>
+              </div>
+            </div>
+            {allExportResult.aiSummary && (
+              <p className="mt-1.5 text-[11px] leading-relaxed text-foreground/80">{allExportResult.aiSummary}</p>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center justify-between px-3 py-1.5">
           <button
             type="button"
@@ -1796,6 +1860,21 @@ function DayReplay({
           <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
             {selectedPlan ? selectedPlan.agent_name : `${day.plans.length} agents`}
           </span>
+          <button
+            type="button"
+            onClick={exportAll}
+            disabled={allExporting || day.plans.length === 0}
+            className={cn(
+              "flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] transition",
+              allExporting || day.plans.length === 0
+                ? "cursor-not-allowed text-muted-foreground/30"
+                : "text-muted-foreground hover:bg-secondary/40 hover:text-foreground",
+            )}
+            title="Export all agents' summaries to Box"
+          >
+            <Export size={11} />
+            {allExporting ? "Exporting…" : "Export All"}
+          </button>
         </div>
         <div
           className={cn(

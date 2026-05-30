@@ -1,34 +1,54 @@
 import { NextRequest, NextResponse } from "next/server"
-import { Readable } from "stream"
 import { getBoxClient } from "@/lib/box"
 
-type BeatExport = {
+type BeatSummary = {
   time: string
   activity: string
   activity_type: string
   location: string
-  coordinates: [number, number]
   travel_mode: string | null
-  travel_path: [number, number][] | null
   travel_duration_min: number | null
   reasoning: string
 }
 
-type DayExport = {
+type DaySummary = {
   date: string
   day_number: number
   diary: string
   world_event: string
-  beats: BeatExport[]
+  beats: BeatSummary[]
 }
 
 type AgentExportPayload = {
   agentId: string
   agentName: string
-  days: DayExport[]
+  days: DaySummary[]
 }
 
 const FOLDER_ID = process.env.BOX_FOLDER_ID ?? "0"
+
+function buildReadableSummary(name: string, days: DaySummary[]): string {
+  let text = `Agent: ${name}\nDays tracked: ${days.length}\n\n`
+
+  for (const day of days) {
+    text += `--- Day ${day.day_number} (${day.date}) ---\n`
+    if (day.world_event) text += `Weather/Event: ${day.world_event}\n`
+    text += `\n`
+
+    for (const b of day.beats) {
+      const travel = b.travel_mode ? ` [${b.travel_mode}, ${b.travel_duration_min}min]` : ""
+      text += `  ${b.time}\n`
+      text += `    ${b.activity} @ ${b.location}${travel}\n`
+      if (b.reasoning) text += `    Reason: ${b.reasoning}\n`
+      text += `\n`
+    }
+
+    if (day.diary) text += `Diary: ${day.diary}\n`
+    text += `\n`
+  }
+
+  return text
+}
 
 async function askBoxAI(fileId: string, token: string, agentName: string): Promise<string | null> {
   try {
@@ -40,30 +60,43 @@ async function askBoxAI(fileId: string, token: string, agentName: string): Promi
       },
       body: JSON.stringify({
         mode: "single_item_qa",
-        prompt: `This file contains ${agentName}'s full activity history across multiple simulation days.
-
-Analyze it and provide a concise personal debrief covering:
-1. How did ${agentName}'s daily routine change across days? (paths, destinations, timing)
-2. Which locations did they visit most consistently vs. which varied?
-3. Any days where their behavior was notably different — were they ever "late" or did they take unusual routes?
-4. What does their travel pattern (walking/driving/cycling, route choices) reveal about their lifestyle?
-
-Keep it to 5-7 sentences, written as a human-readable summary about this specific person.`,
+        prompt: `Summarize what ${agentName} did across these days. Note any patterns, changes in routine, or unusual behavior. Keep it to 4-6 sentences.`,
         items: [{ type: "file", id: fileId }],
       }),
     })
 
     if (!res.ok) {
-      console.error("[Box AI agent error]", res.status, await res.text())
+      console.error("[Box AI error]", res.status, await res.text())
       return null
     }
 
     const data = await res.json()
     return data.answer ?? null
   } catch (err) {
-    console.error("[Box AI agent fetch error]", err)
+    console.error("[Box AI fetch error]", err)
     return null
   }
+}
+
+async function uploadToBox(content: string, filename: string, token: string) {
+  const blob = new Blob([content], { type: "text/plain" })
+  const form = new FormData()
+  form.append("attributes", JSON.stringify({ name: filename, parent: { id: FOLDER_ID } }))
+  form.append("file", blob, filename)
+
+  const res = await fetch("https://upload.box.com/api/2.0/files/content", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Box upload failed (${res.status}): ${text}`)
+  }
+
+  const data = await res.json()
+  return data.entries[0]
 }
 
 export async function POST(req: NextRequest) {
@@ -75,57 +108,14 @@ export async function POST(req: NextRequest) {
     }
 
     const exportedAt = new Date().toISOString()
+    const summary = buildReadableSummary(payload.agentName, payload.days)
+    const filename = `${payload.agentName.replace(/\s+/g, "-").toLowerCase()}-summary-${exportedAt.replace(/[:.]/g, "-")}.txt`
 
-    // Build a rich report with cross-day comparison data
-    const report = {
-      exportedAt,
-      agent: {
-        id: payload.agentId,
-        name: payload.agentName,
-      },
-      totalDays: payload.days.length,
-      summary: {
-        totalBeats: payload.days.reduce((sum, d) => sum + d.beats.length, 0),
-        uniqueLocations: [
-          ...new Set(payload.days.flatMap((d) => d.beats.map((b) => b.location))),
-        ],
-        travelModes: [
-          ...new Set(
-            payload.days
-              .flatMap((d) => d.beats.map((b) => b.travel_mode))
-              .filter(Boolean),
-          ),
-        ],
-      },
-      days: payload.days.map((d) => ({
-        date: d.date,
-        day_number: d.day_number,
-        world_event: d.world_event,
-        diary: d.diary,
-        route_summary: d.beats.map((b) => ({
-          time: b.time,
-          from_to: b.travel_mode
-            ? `→ ${b.location} (${b.travel_mode}, ${b.travel_duration_min}min)`
-            : `@ ${b.location}`,
-          activity: b.activity,
-          activity_type: b.activity_type,
-          coordinates: b.coordinates,
-          path_points: b.travel_path?.length ?? 0,
-          reasoning: b.reasoning,
-        })),
-      })),
-    }
-
-    const json = JSON.stringify(report, null, 2)
-    const filename = `agent-${payload.agentName.replace(/\s+/g, "-").toLowerCase()}-${exportedAt.replace(/[:.]/g, "-")}.json`
-
-    const client = getBoxClient()
-    const stream = Readable.from(Buffer.from(json, "utf-8"))
-    const uploaded = await client.files.uploadFile(FOLDER_ID, filename, stream)
-    const file = uploaded.entries[0]
-
-    // Ask Box AI to analyze the agent's multi-day history
     const token = process.env.BOX_DEVELOPER_TOKEN!
+
+    // Upload directly via Box REST API to avoid SDK stream issues
+    const file = await uploadToBox(summary, filename, token)
+
     const aiSummary = await askBoxAI(file.id, token, payload.agentName)
 
     return NextResponse.json({

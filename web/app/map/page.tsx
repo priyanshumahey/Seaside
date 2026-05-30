@@ -955,13 +955,13 @@ function DayReplay({
     })
   }, [selectedPlan, dayStartMs])
 
-  // Export the selected agent's full multi-day history to Box and get AI analysis
+  // Export the selected agent's multi-day summary to Box and get AI analysis
   const exportAgent = useCallback(async () => {
     if (!selectedPlan) return
     setAgentExporting(true)
     setAgentExportResult(null)
     try {
-      // Gather this agent's plans across ALL days for cross-day comparison
+      // Gather summary-only data — no GPS paths, just activities and locations
       const agentPlans = days.map((d) => {
         const plan = d.plans.find((p) => p.agent_id === selectedPlan.agent_id)
         if (!plan) return null
@@ -975,9 +975,7 @@ function DayReplay({
             activity: b.activity,
             activity_type: b.activity_type,
             location: b.location_name,
-            coordinates: b.location,
             travel_mode: b.travel_from_prev?.mode ?? null,
-            travel_path: b.travel_from_prev?.polyline ?? null,
             travel_duration_min: b.travel_from_prev?.duration_minutes ?? null,
             reasoning: b.reasoning,
           })),
@@ -1526,22 +1524,45 @@ function DayReplay({
                   {/* Multi-day path legend — shown when history overlay is on */}
                   {showHistory && days.length > 0 && (() => {
                     const DAY_COLORS = ["#f472b6", "#38bdf8", "#34d399", "#fb923c", "#a78bfa", "#facc15", "#f87171"]
+                    const DASH_LABELS = ["solid", "– –", "- -", "···", "–·–", "··", "———"]
                     return (
                       <div className="mb-2.5 rounded-sm border border-border/40 bg-secondary/20 px-2 py-2">
-                        <div className="mb-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground">Path history</div>
+                        <div className="mb-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground">Path history — click to jump</div>
                         <div className="flex flex-col gap-1">
-                          {days.map((d, di) => (
-                            <div key={d.sim_date} className="flex items-center gap-2">
-                              <span
-                                className="h-0.5 w-5 shrink-0 rounded-full"
-                                style={{ backgroundColor: DAY_COLORS[di % DAY_COLORS.length] }}
-                              />
-                              <span className="text-[10px] text-foreground/70">
-                                Day {d.day_number} — {fmtDate(d.sim_date)}
-                                {di === dayIdx ? <span className="ml-1 text-muted-foreground/60">(current)</span> : null}
-                              </span>
-                            </div>
-                          ))}
+                          {days.map((d, di) => {
+                            const agentPlan = d.plans.find((p) => p.agent_id === selectedId)
+                            const beatCount = agentPlan?.beats.length ?? 0
+                            const color = DAY_COLORS[di % DAY_COLORS.length]
+                            const isCurrent = di === dayIdx
+                            return (
+                              <button
+                                key={d.sim_date}
+                                type="button"
+                                onClick={() => goToDay(di)}
+                                className={cn(
+                                  "flex items-center gap-2 rounded-sm px-1.5 py-1 text-left transition hover:bg-secondary/40",
+                                  isCurrent ? "bg-secondary/30" : "",
+                                )}
+                              >
+                                <span
+                                  className="h-0.5 w-6 shrink-0 rounded-full"
+                                  style={{ backgroundColor: color }}
+                                />
+                                <span className="text-[9px] text-muted-foreground/60 w-5 shrink-0">
+                                  {DASH_LABELS[di % DASH_LABELS.length]}
+                                </span>
+                                <span className="flex-1 text-[10px] text-foreground/80">
+                                  Day {d.day_number} — {fmtDate(d.sim_date)}
+                                </span>
+                                <span className="text-[9px] text-muted-foreground/50 shrink-0">
+                                  {beatCount} stops
+                                </span>
+                                {isCurrent && (
+                                  <span className="text-[9px] text-amber-400 shrink-0">●</span>
+                                )}
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
                     )
@@ -2159,6 +2180,20 @@ function installLayers(map: mapboxgl.Map) {
       type: "geojson",
       data: { type: "FeatureCollection", features: [] },
     })
+    // Glow layer for visibility
+    map.addLayer({
+      id: "history-routes-glow",
+      type: "line",
+      source: "history-routes",
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": ["get", "color"],
+        "line-width": 8,
+        "line-opacity": 0.12,
+        "line-blur": 3,
+      },
+    })
+    // Main line — solid, color-coded per day
     map.addLayer({
       id: "history-routes-line",
       type: "line",
@@ -2166,9 +2201,17 @@ function installLayers(map: mapboxgl.Map) {
       layout: { "line-cap": "round", "line-join": "round" },
       paint: {
         "line-color": ["get", "color"],
-        "line-width": 2,
-        "line-opacity": 0.45,
-        "line-dasharray": [2, 3],
+        "line-width": ["interpolate", ["linear"], ["zoom"], 11, 2, 16, 4],
+        "line-opacity": 0.75,
+        "line-dasharray": ["step", ["get", "dayNum"],
+          ["literal", [1, 0]],   // day 0: solid
+          1, ["literal", [4, 2]], // day 1: long dash
+          2, ["literal", [2, 2]], // day 2: medium dash
+          3, ["literal", [1, 2]], // day 3: short dash
+          4, ["literal", [4, 1, 1, 1]], // day 4: dash-dot
+          5, ["literal", [2, 1]], // day 5: dotted
+          6, ["literal", [6, 2]], // day 6: long dash
+        ],
       },
     })
   }

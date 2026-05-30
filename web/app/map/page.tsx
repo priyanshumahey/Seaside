@@ -71,6 +71,17 @@ function randomInZone(zone: [number, number, number, string]): [number, number] 
   return [zone[0] + r * Math.cos(angle), zone[1] + r * Math.sin(angle)]
 }
 
+/** Find the zone whose centre is closest to the given coordinates. */
+function nearestZone(lng: number, lat: number): string {
+  let best = ZONES[0]
+  let bestDist = Infinity
+  for (const z of ZONES) {
+    const d = Math.sqrt((lng - z[0]) ** 2 + (lat - z[1]) ** 2)
+    if (d < bestDist) { bestDist = d; best = z }
+  }
+  return best[3]
+}
+
 type Agent = {
   id: string
   name: string
@@ -86,6 +97,13 @@ type Agent = {
   age?: number
   location_home?: string
   location_work?: string
+  // ── persona / spatial fields from migration_001 ──────────────────────────
+  home_lat?: number
+  home_lng?: number
+  work_lat?: number
+  work_lng?: number
+  interests?: string
+  occupation_context?: string
 }
 
 async function fetchRoute(start: [number, number], end: [number, number]): Promise<[number, number][] | null> {
@@ -162,32 +180,50 @@ export default function MapPage() {
   const simTimeRef = useRef(new Date(new Date().setHours(8, 0, 0, 0)))
   const [simTime, setSimTime] = useState("08:00 AM")
   const [activities, setActivities] = useState<{ name: string; activity: string; reasoning: string }[]>([])
-
-  // ── Agent panel split state ──────────────────────────────────────────────
   const [panelOpen, setPanelOpen] = useState(false)
 
   const fetchAgents = useCallback(() => {
     supabase.from("agents").select("*").then(({ data }) => {
       if (!data || data.length === 0) return
       const mapped: Agent[] = data.map((row, i) => {
-        const startIdx = i % ZONES.length
-        const startZone = ZONES[startIdx]
-        const endZone = ZONES[(i + 1 + Math.floor(i / ZONES.length)) % ZONES.length]
+        const fallbackZoneIdx = i % ZONES.length
+
+        // Use real home coordinates if available; otherwise fall back to zone centre
+        const hasHome = typeof row.home_lat === "number" && typeof row.home_lng === "number"
+        const start: [number, number] = hasHome
+          ? [row.home_lng, row.home_lat]                     // Mapbox uses [lng, lat]
+          : randomInZone(ZONES[fallbackZoneIdx])
+
+        // Use real work coordinates if available; otherwise use adjacent zone
+        const hasWork = typeof row.work_lat === "number" && typeof row.work_lng === "number"
+        const end: [number, number] = hasWork
+          ? [row.work_lng, row.work_lat]
+          : randomInZone(ZONES[(fallbackZoneIdx + 1) % ZONES.length])
+
+        const zone     = hasHome ? nearestZone(row.home_lng, row.home_lat) : ZONES[fallbackZoneIdx][3]
+        const destZone = hasWork ? nearestZone(row.work_lng, row.work_lat) : ZONES[(fallbackZoneIdx + 1) % ZONES.length][3]
+
         return {
-          id: row.id,
-          name: row.name,
-          color: COLORS[i % COLORS.length],
-          personality: row.personality || "",
-          config: row.profile_pic || genConfig(),
-          start: randomInZone(startZone),
-          end: randomInZone(endZone),
-          zone: startZone[3],
-          destZone: endZone[3],
-          zoneIndex: startIdx,
-          job_description: row.job_description,
-          age: row.age,
-          location_home: row.location_home,
-          location_work: row.location_work,
+          id:                 row.id,
+          name:               row.name,
+          color:              COLORS[i % COLORS.length],
+          personality:        row.personality        || "",
+          config:             row.profile_pic        || genConfig(),
+          start,
+          end,
+          zone,
+          destZone,
+          zoneIndex:          fallbackZoneIdx,
+          job_description:    row.job_description,
+          age:                row.age,
+          location_home:      row.location_home,
+          location_work:      row.location_work,
+          home_lat:           row.home_lat,
+          home_lng:           row.home_lng,
+          work_lat:           row.work_lat,
+          work_lng:           row.work_lng,
+          interests:          row.interests,
+          occupation_context: row.occupation_context,
         }
       })
       setAgents(mapped)
@@ -197,7 +233,7 @@ export default function MapPage() {
 
   useEffect(() => { fetchAgents() }, [fetchAgents])
 
-  // Resize map when panel opens/closes (after CSS transition completes)
+  // Resize map after panel open/close CSS transition completes
   useEffect(() => {
     const t = setTimeout(() => { mapRef.current?.resize() }, 310)
     return () => clearTimeout(t)
@@ -389,21 +425,16 @@ export default function MapPage() {
         const cur = positionsRef.current[i]
         const old = prev[i]
         if (cur && old) {
-          const dx = cur[0] - old[0]
-          const dy = cur[1] - old[1]
+          const dx = cur[0] - old[0]; const dy = cur[1] - old[1]
           const d = Math.sqrt(dx * dx + dy * dy)
-          frame.perAgent[a.id] = d
-          frame.total += d
-        } else {
-          frame.perAgent[a.id] = 0
-        }
+          frame.perAgent[a.id] = d; frame.total += d
+        } else { frame.perAgent[a.id] = 0 }
       }
       prev = positionsRef.current.map((p) => [p[0], p[1]])
       const next = framesRef.current.length >= MAX_FRAMES
         ? [...framesRef.current.slice(framesRef.current.length - MAX_FRAMES + 1), frame]
         : [...framesRef.current, frame]
-      framesRef.current = next
-      setFrames(next)
+      framesRef.current = next; setFrames(next)
     }, 33)
     return () => clearInterval(interval)
   }, [agentRunning])
@@ -423,10 +454,8 @@ export default function MapPage() {
     setAgentRunning(true)
     runningRef.current = true
     setActivities([])
-    framesRef.current = []
-    setFrames([])
-    timersRef.current.forEach(clearTimeout)
-    timersRef.current = []
+    framesRef.current = []; setFrames([])
+    timersRef.current.forEach(clearTimeout); timersRef.current = []
 
     positionsRef.current = currentAgents.map((a) => a.start)
 
@@ -443,33 +472,17 @@ export default function MapPage() {
       (map.getSource("agents-src") as mapboxgl.GeoJSONSource).setData(collection)
     } else {
       map.addSource("agents-src", { type: "geojson", data: collection })
-      map.addLayer({
-        id: "agents-glow", type: "circle", source: "agents-src",
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 10, 17, 20, 21, 40],
-          "circle-color": ["get", "color"], "circle-opacity": 0.2, "circle-blur": 1,
-        },
-      })
-      map.addLayer({
-        id: "agents-dot", type: "circle", source: "agents-src",
-        paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 5, 17, 10, 21, 20],
-          "circle-color": ["get", "color"], "circle-stroke-width": 1.5, "circle-stroke-color": "#fff",
-        },
-      })
+      map.addLayer({ id: "agents-glow", type: "circle", source: "agents-src", paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 10, 17, 20, 21, 40], "circle-color": ["get", "color"], "circle-opacity": 0.2, "circle-blur": 1 } })
+      map.addLayer({ id: "agents-dot",  type: "circle", source: "agents-src", paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 5, 17, 10, 21, 20], "circle-color": ["get", "color"], "circle-stroke-width": 1.5, "circle-stroke-color": "#fff" } })
     }
 
     if (!map.getSource("all-routes")) {
       map.addSource("all-routes", { type: "geojson", data: { type: "FeatureCollection", features: [] } })
-      map.addLayer({
-        id: "all-routes-line", type: "line", source: "all-routes",
-        paint: { "line-color": ["get", "color"], "line-width": 2, "line-opacity": 0.4, "line-dasharray": [2, 2] },
-      })
+      map.addLayer({ id: "all-routes-line", type: "line", source: "all-routes", paint: { "line-color": ["get", "color"], "line-width": 2, "line-opacity": 0.4, "line-dasharray": [2, 2] } })
     }
 
     currentAgents.forEach((_, i) => {
-      const delay = i * 800
-      const t = setTimeout(() => cycleAgent(i), delay)
+      const t = setTimeout(() => cycleAgent(i), i * 800)
       timersRef.current.push(t)
     })
   }, [cycleAgent])
@@ -478,19 +491,8 @@ export default function MapPage() {
     map.easeTo({ pitch: 55, bearing: 0 })
     map.once("idle", () => {
       if (!map.getLayer("3d-buildings")) {
-        if (!map.getSource("composite")) {
-          map.addSource("composite", { type: "vector", url: "mapbox://mapbox.mapbox-streets-v8" })
-        }
-        map.addLayer({
-          id: "3d-buildings", source: "composite", "source-layer": "building",
-          type: "fill-extrusion", minzoom: 14,
-          paint: {
-            "fill-extrusion-color": "#aaa",
-            "fill-extrusion-height": ["get", "height"],
-            "fill-extrusion-base": ["get", "min_height"],
-            "fill-extrusion-opacity": 0.6,
-          },
-        })
+        if (!map.getSource("composite")) map.addSource("composite", { type: "vector", url: "mapbox://mapbox.mapbox-streets-v8" })
+        map.addLayer({ id: "3d-buildings", source: "composite", "source-layer": "building", type: "fill-extrusion", minzoom: 14, paint: { "fill-extrusion-color": "#aaa", "fill-extrusion-height": ["get", "height"], "fill-extrusion-base": ["get", "min_height"], "fill-extrusion-opacity": 0.6 } })
       }
     })
     setIs3D(true)
@@ -502,26 +504,13 @@ export default function MapPage() {
     setIs3D(false)
   }, [])
 
-  const toggle3D = () => {
-    const map = mapRef.current
-    if (!map) return
-    if (is3D) disable3D(map)
-    else enable3D(map)
-  }
+  const toggle3D = () => { const map = mapRef.current; if (!map) return; if (is3D) disable3D(map); else enable3D(map) }
 
-  const stopFollowing = useCallback(() => {
-    followingIndexRef.current = null
-    setFollowingIndex(null)
-  }, [])
-
-  const closeProfile = useCallback(() => {
-    setSelectedAgent(null)
-    stopFollowing()
-  }, [stopFollowing])
+  const stopFollowing = useCallback(() => { followingIndexRef.current = null; setFollowingIndex(null) }, [])
+  const closeProfile  = useCallback(() => { setSelectedAgent(null); stopFollowing() }, [stopFollowing])
 
   const resetView = () => {
-    stopFollowing()
-    setSelectedAgent(null)
+    stopFollowing(); setSelectedAgent(null)
     mapRef.current?.flyTo({ center: SEATTLE_CENTER, zoom: 12, pitch: 0, bearing: 0 })
     if (mapRef.current?.getLayer("3d-buildings")) mapRef.current.removeLayer("3d-buildings")
     setIs3D(false)
@@ -529,17 +518,13 @@ export default function MapPage() {
 
   return (
     <div className="flex h-svh w-full flex-1 flex-col overflow-hidden bg-background text-foreground">
-      {/* ── Main area: map + optional agent panel ── */}
       <div className="flex min-h-0 flex-1">
 
-        {/* Map section — shrinks to 60% when panel is open */}
-        <div className={cn(
-          "relative transition-all duration-300 ease-out",
-          panelOpen ? "w-[60%]" : "w-full",
-        )}>
+        {/* Map — shrinks to 60% when panel is open */}
+        <div className={cn("relative transition-all duration-300 ease-out", panelOpen ? "w-[60%]" : "w-full")}>
           <div ref={mapContainer} className="absolute inset-0 h-full w-full" />
 
-          {/* Top-left: clock */}
+          {/* Clock */}
           <div className="absolute left-4 top-4 z-20 flex items-center gap-3">
             <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/80 px-3 py-1.5 backdrop-blur">
               <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_0_var(--color-emerald-400,#34d399)]" />
@@ -550,68 +535,52 @@ export default function MapPage() {
             </span>
           </div>
 
-          {/* Top-center: map controls */}
+          {/* Map style controls */}
           <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2">
             <div className="flex items-center gap-1 rounded-md border border-border/60 bg-card/80 p-1 backdrop-blur">
               {(Object.keys(STYLES) as StyleKey[]).map((s) => (
                 <button key={s} type="button" onClick={() => setStyle(s)}
                   className={cn("rounded-sm px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] transition",
-                    style === s ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
-                  )}>{s}</button>
+                    style === s ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground")}>{s}</button>
               ))}
               <div className="mx-1 h-4 w-px bg-border/60" />
               <button type="button" onClick={toggle3D} aria-pressed={is3D}
                 className={cn("flex items-center gap-1 rounded-sm px-2 py-1 text-[10px] uppercase tracking-[0.18em] transition",
-                  is3D ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
-                )}><Cube size={12} weight={is3D ? "fill" : "regular"} /> 3D</button>
+                  is3D ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground")}>
+                <Cube size={12} weight={is3D ? "fill" : "regular"} /> 3D
+              </button>
               <button type="button" onClick={resetView}
                 className="flex items-center rounded-sm px-2 py-1 text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
                 aria-label="Reset view"><ArrowsCounterClockwise size={12} /></button>
             </div>
           </div>
 
-          {/* Top-right: launch + activity + agent panel toggle */}
+          {/* Top-right controls */}
           <div className="absolute right-4 top-4 z-30 flex items-center gap-2">
             <button type="button" onClick={agentRunning ? stopAgents : startAgents}
               disabled={!agentRunning && (loadingRoutes || agents.length === 0)}
-              className={cn(
-                "flex items-center gap-2 rounded-md border border-border/60 bg-card/80 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition",
-                !agentRunning && (loadingRoutes || agents.length === 0) ? "cursor-not-allowed text-muted-foreground/50" : "text-foreground hover:bg-card"
-              )}>
+              className={cn("flex items-center gap-2 rounded-md border border-border/60 bg-card/80 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition",
+                !agentRunning && (loadingRoutes || agents.length === 0) ? "cursor-not-allowed text-muted-foreground/50" : "text-foreground hover:bg-card")}>
               <Play size={12} weight={agentRunning ? "regular" : "fill"} />
               {loadingRoutes ? "Loading." : agentRunning ? "Stop" : agents.length === 0 ? "No Agents" : "Launch"}
             </button>
             <button type="button" onClick={() => setActivityOpen((o) => !o)} aria-pressed={activityOpen}
               className={cn("flex items-center gap-2 rounded-md border border-border/60 bg-card/80 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition",
-                activityOpen ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-              )}><WaveSine size={12} /> Activity</button>
-
-            {/* ── Hamburger: toggle agent creation panel ── */}
-            <button
-              type="button"
-              onClick={() => setPanelOpen((o) => !o)}
-              aria-pressed={panelOpen}
-              aria-label="Toggle agent panel"
-              className={cn(
-                "flex items-center gap-2 rounded-md border border-border/60 bg-card/80 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition",
-                panelOpen ? "border-foreground/40 text-foreground" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <List size={12} weight={panelOpen ? "fill" : "regular"} />
-              Agents
+                activityOpen ? "text-foreground" : "text-muted-foreground hover:text-foreground")}>
+              <WaveSine size={12} /> Activity
+            </button>
+            <button type="button" onClick={() => setPanelOpen((o) => !o)} aria-pressed={panelOpen} aria-label="Toggle agent panel"
+              className={cn("flex items-center gap-2 rounded-md border border-border/60 bg-card/80 px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] backdrop-blur transition",
+                panelOpen ? "border-foreground/40 text-foreground" : "text-muted-foreground hover:text-foreground")}>
+              <List size={12} weight={panelOpen ? "fill" : "regular"} /> Agents
             </button>
           </div>
 
-          {/* Right rail: activity stream + agent profile */}
-          <aside
-            className="absolute bottom-4 right-4 top-14 z-10 flex w-72 flex-col gap-2"
-            aria-hidden={!activityOpen && !selectedAgent}
-          >
-            <div className={cn(
-              "flex flex-col overflow-hidden rounded-md border border-border/60 bg-card/85 backdrop-blur transition-all duration-200 ease-out",
+          {/* Activity stream + unit profile */}
+          <aside className="absolute bottom-4 right-4 top-14 z-10 flex w-72 flex-col gap-2" aria-hidden={!activityOpen && !selectedAgent}>
+            <div className={cn("flex flex-col overflow-hidden rounded-md border border-border/60 bg-card/85 backdrop-blur transition-all duration-200 ease-out",
               activityOpen ? "translate-x-0 opacity-100" : "pointer-events-none translate-x-4 opacity-0",
-              selectedAgent ? "h-44 flex-none" : "flex-1 min-h-0",
-            )}>
+              selectedAgent ? "h-44 flex-none" : "flex-1 min-h-0")}>
               <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
                 <span className="text-[10px] uppercase tracking-[0.18em] text-foreground">Activity Stream</span>
                 <WaveSine size={12} className="text-muted-foreground" />
@@ -625,9 +594,7 @@ export default function MapPage() {
                 ) : (
                   activities.map((a, i) => (
                     <div key={i} className="rounded border border-border/40 px-2.5 py-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[11px] font-medium text-foreground">{a.name}</p>
-                      </div>
+                      <p className="text-[11px] font-medium text-foreground">{a.name}</p>
                       <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">{a.activity}</p>
                     </div>
                   ))
@@ -642,25 +609,22 @@ export default function MapPage() {
                   <div className="flex items-center gap-1">
                     <button type="button"
                       onClick={() => {
-                        const map = mapRef.current
-                        const idx = followingIndexRef.current
+                        const map = mapRef.current; const idx = followingIndexRef.current
                         if (map && idx !== null && positionsRef.current[idx]) {
                           followTargetRef.current = { zoom: 16.5, pitch: 55 }
                           map.flyTo({ center: positionsRef.current[idx], zoom: 16.5, pitch: 55, speed: 1.1, curve: 1.4, essential: true })
                         }
                       }}
                       className={cn("rounded-sm p-1 transition", followingIndex !== null ? "text-emerald-400 hover:bg-secondary/60" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground")}
-                      aria-label="Recenter on unit" title="Recenter">
+                      aria-label="Recenter on unit">
                       <Crosshair size={12} weight={followingIndex !== null ? "fill" : "regular"} />
                     </button>
                     <button type="button" onClick={closeProfile}
-                      className="rounded-sm p-1 text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
-                      aria-label="Close profile">
+                      className="rounded-sm p-1 text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground" aria-label="Close profile">
                       <X size={12} />
                     </button>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-3 border-b border-border/60 px-3 py-3">
                   <div className="size-12 shrink-0 overflow-hidden rounded-full border-2" style={{ borderColor: selectedAgent.color + "66" }}>
                     <Avatar style={{ width: "100%", height: "100%" }} {...selectedAgent.config} />
@@ -673,15 +637,19 @@ export default function MapPage() {
                     </span>
                   </div>
                 </div>
-
                 <div className="flex-1 overflow-y-auto">
                   <DiagRow label="Target" value={`${selectedAgent.name.split(" ")[0].toUpperCase()}[${zoneCode(selectedAgent.zone)}]`} accentColor={selectedAgent.color} />
-                  <DiagRow label="Zone" value={`${zoneCode(selectedAgent.zone)}  →  ${zoneCode(selectedAgent.destZone)}`} />
+                  <DiagRow label="Zone"   value={`${zoneCode(selectedAgent.zone)}  →  ${zoneCode(selectedAgent.destZone)}`} />
                   <DiagRow label="Status" value={agentRunning ? "Walking" : "Idle"} />
-                  {selectedAgent.age != null && <DiagRow label="Age" value={String(selectedAgent.age)} />}
-                  {selectedAgent.location_home && <DiagRow label="Home" value={selectedAgent.location_home} />}
-                  {selectedAgent.location_work && <DiagRow label="Work" value={selectedAgent.location_work} />}
-
+                  {selectedAgent.age           != null && <DiagRow label="Age"  value={String(selectedAgent.age)} />}
+                  {selectedAgent.location_home        && <DiagRow label="Home" value={selectedAgent.location_home} />}
+                  {selectedAgent.location_work        && <DiagRow label="Work" value={selectedAgent.location_work} />}
+                  {selectedAgent.interests            && (
+                    <div className="border-t border-border/60 px-3 py-3">
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Interests</div>
+                      <p className="mt-2 text-xs leading-relaxed text-foreground/85">{selectedAgent.interests}</p>
+                    </div>
+                  )}
                   {selectedAgent.personality && (
                     <div className="border-t border-border/60 px-3 py-3">
                       <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Personality</div>
@@ -700,21 +668,15 @@ export default function MapPage() {
           </aside>
         </div>
 
-        {/* ── Agent Creation Panel — 40% when open ── */}
-        <div className={cn(
-          "shrink-0 overflow-hidden transition-all duration-300 ease-out",
-          panelOpen ? "w-[40%]" : "w-0",
-        )}>
+        {/* Agent creation panel — 40% */}
+        <div className={cn("shrink-0 overflow-hidden transition-all duration-300 ease-out", panelOpen ? "w-[40%]" : "w-0")}>
           {panelOpen && (
-            <AgentCreationPanel
-              onClose={() => setPanelOpen(false)}
-              onCreated={fetchAgents}
-            />
+            <AgentCreationPanel onClose={() => setPanelOpen(false)} onCreated={fetchAgents} />
           )}
         </div>
       </div>
 
-      {/* Bottom: timeline drawer */}
+      {/* Timeline */}
       <div className="shrink-0 border-t border-border/60 bg-card/85 backdrop-blur">
         <div className="flex items-center justify-between px-4 py-2">
           <button type="button" onClick={() => setTimelineOpen((o) => !o)} aria-expanded={timelineOpen}
@@ -725,19 +687,13 @@ export default function MapPage() {
           <div className="flex items-center gap-3">
             <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Speed</span>
             <input type="range" min={0.25} max={5} step={0.25} value={speed}
-              onChange={(e) => setSpeed(parseFloat(e.target.value))}
-              className="h-1 w-24 cursor-pointer accent-foreground" />
+              onChange={(e) => setSpeed(parseFloat(e.target.value))} className="h-1 w-24 cursor-pointer accent-foreground" />
             <span className="font-mono text-[10px] tabular-nums text-foreground">{speed.toFixed(2)}x</span>
           </div>
         </div>
         <div className={cn("overflow-hidden transition-[max-height] duration-300 ease-out", timelineOpen ? "max-h-64" : "max-h-0")}>
           <div className="border-t border-border/60 px-4 py-4">
-            <TimelineChart
-              frames={frames}
-              selectedAgent={selectedAgent}
-              totalAgents={agents.length}
-              running={agentRunning}
-            />
+            <TimelineChart frames={frames} selectedAgent={selectedAgent} totalAgents={agents.length} running={agentRunning} />
           </div>
         </div>
       </div>
@@ -746,13 +702,9 @@ export default function MapPage() {
 }
 
 const ZONE_NAME_TO_CODE: Record<string, string> = {
-  "Downtown Seattle": "DOWN",
-  "South Lake Union": "SLU",
-  Bellevue: "BELL",
-  Redmond: "RED",
-  Sammamish: "SAMM",
+  "Downtown Seattle": "DOWN", "South Lake Union": "SLU",
+  Bellevue: "BELL", Redmond: "RED", Sammamish: "SAMM",
 }
-
 function zoneCode(zoneName: string): string {
   return ZONE_NAME_TO_CODE[zoneName] ?? zoneName.slice(0, 4).toUpperCase()
 }
@@ -761,30 +713,22 @@ function DiagRow({ label, value, accentColor }: { label: string; value: string; 
   return (
     <div className="flex items-center justify-between border-t border-border/60 px-3 py-2 first:border-t-0">
       <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</span>
-      <span className="font-mono text-[11px] tracking-tight text-foreground" style={accentColor ? { color: accentColor } : undefined}>
-        {value}
-      </span>
+      <span className="font-mono text-[11px] tracking-tight text-foreground" style={accentColor ? { color: accentColor } : undefined}>{value}</span>
     </div>
   )
 }
 
 function TimelineChart({ frames, selectedAgent, totalAgents, running }: {
-  frames: TimelineFrame[]
-  selectedAgent: Agent | null
-  totalAgents: number
-  running: boolean
+  frames: TimelineFrame[]; selectedAgent: Agent | null; totalAgents: number; running: boolean
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 800, h: 192 })
   const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
 
   useEffect(() => {
-    const el = wrapRef.current
-    if (!el) return
+    const el = wrapRef.current; if (!el) return
     const update = () => setSize({ w: el.clientWidth, h: el.clientHeight })
-    update()
-    const ro = new ResizeObserver(update)
-    ro.observe(el)
+    update(); const ro = new ResizeObserver(update); ro.observe(el)
     return () => ro.disconnect()
   }, [])
 
@@ -793,27 +737,21 @@ function TimelineChart({ frames, selectedAgent, totalAgents, running }: {
   const innerW = Math.max(10, W - padL - padR); const innerH = Math.max(10, H - padT - padB)
 
   const smooth = (vals: number[], win: number) => {
-    if (vals.length === 0) return vals
-    const half = Math.floor(win / 2)
-    return vals.map((_, i) => {
-      const a = Math.max(0, i - half); const b = Math.min(vals.length - 1, i + half)
-      let s = 0; for (let k = a; k <= b; k++) s += vals[k]
-      return s / (b - a + 1)
-    })
+    if (vals.length === 0) return vals; const half = Math.floor(win / 2)
+    return vals.map((_, i) => { const a = Math.max(0, i - half); const b = Math.min(vals.length - 1, i + half); let s = 0; for (let k = a; k <= b; k++) s += vals[k]; return s / (b - a + 1) })
   }
 
-  const popRaw = frames.map((f) => (totalAgents > 0 ? f.total / totalAgents : 0))
-  const pop = smooth(popRaw, 7)
+  const popRaw  = frames.map((f) => (totalAgents > 0 ? f.total / totalAgents : 0))
+  const pop     = smooth(popRaw, 7)
   const agentRaw = selectedAgent ? frames.map((f) => f.perAgent[selectedAgent.id] ?? 0) : []
-  const agent = smooth(agentRaw, 7)
-  const maxV = Math.max(1e-12, ...pop, ...agent)
-  const xStep = frames.length > 1 ? innerW / (frames.length - 1) : innerW
-  const xAt = (i: number) => padL + i * xStep
-  const yAt = (v: number) => padT + innerH - (v / maxV) * innerH * 0.92
+  const agent   = smooth(agentRaw, 7)
+  const maxV    = Math.max(1e-12, ...pop, ...agent)
+  const xStep   = frames.length > 1 ? innerW / (frames.length - 1) : innerW
+  const xAt     = (i: number) => padL + i * xStep
+  const yAt     = (v: number) => padT + innerH - (v / maxV) * innerH * 0.92
 
   const buildSmoothPath = (values: number[]) => {
-    if (values.length === 0) return ""
-    if (values.length === 1) return `M${xAt(0)},${yAt(values[0])}`
+    if (values.length === 0) return ""; if (values.length === 1) return `M${xAt(0)},${yAt(values[0])}`
     const pts = values.map((v, i) => [xAt(i), yAt(v)] as const)
     let d = `M${pts[0][0]},${pts[0][1]}`
     for (let i = 0; i < pts.length - 1; i++) {
@@ -824,16 +762,11 @@ function TimelineChart({ frames, selectedAgent, totalAgents, running }: {
     }
     return d
   }
-
-  const closeArea = (linePath: string) => {
-    if (!linePath || frames.length === 0) return ""
-    return `${linePath} L${xAt(frames.length - 1)},${padT + innerH} L${xAt(0)},${padT + innerH} Z`
-  }
+  const closeArea = (linePath: string) => (!linePath || frames.length === 0) ? "" : `${linePath} L${xAt(frames.length - 1)},${padT + innerH} L${xAt(0)},${padT + innerH} Z`
 
   const popLine = buildSmoothPath(pop); const popArea = closeArea(popLine)
   const agentLine = selectedAgent ? buildSmoothPath(agent) : ""; const agentArea = closeArea(agentLine)
-  const focused = !!selectedAgent
-  const popStroke = focused ? AGENT_BACKDROP_COLOR : PULSE_COLOR
+  const focused = !!selectedAgent; const popStroke = focused ? AGENT_BACKDROP_COLOR : PULSE_COLOR
   const popFillId = focused ? "grad-pop-dim" : "grad-pop"
   const gridYs = [0, 0.25, 0.5, 0.75, 1].map((p) => padT + innerH * p)
   const hoverIdx = hover ? hover.idx : -1
@@ -843,8 +776,7 @@ function TimelineChart({ frames, selectedAgent, totalAgents, running }: {
 
   const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (frames.length === 0) return
-    const r = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - r.left
+    const r = e.currentTarget.getBoundingClientRect(); const x = e.clientX - r.left
     if (x < padL - 4 || x > padL + innerW + 4) { setHover(null); return }
     const rel = Math.min(innerW, Math.max(0, x - padL))
     const idx = frames.length > 1 ? Math.round(rel / xStep) : 0
@@ -856,99 +788,44 @@ function TimelineChart({ frames, selectedAgent, totalAgents, running }: {
       onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
       <svg width={W} height={H} className="absolute inset-0 block">
         <defs>
-          <linearGradient id="grad-pop" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={PULSE_COLOR} stopOpacity={0.55} />
-            <stop offset="100%" stopColor={PULSE_COLOR} stopOpacity={0.04} />
-          </linearGradient>
-          <linearGradient id="grad-pop-dim" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={AGENT_BACKDROP_COLOR} stopOpacity={0.35} />
-            <stop offset="100%" stopColor={AGENT_BACKDROP_COLOR} stopOpacity={0.03} />
-          </linearGradient>
-          {selectedAgent && (
-            <linearGradient id="grad-agent" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={selectedAgent.color} stopOpacity={0.9} />
-              <stop offset="100%" stopColor={selectedAgent.color} stopOpacity={0.1} />
-            </linearGradient>
-          )}
-          <filter id="glow-agent" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="2.5" result="b" />
-            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
+          <linearGradient id="grad-pop"     x1="0" y1="0" x2="0" y2="1"><stop offset="0%"   stopColor={PULSE_COLOR}          stopOpacity={0.55} /><stop offset="100%" stopColor={PULSE_COLOR}          stopOpacity={0.04} /></linearGradient>
+          <linearGradient id="grad-pop-dim" x1="0" y1="0" x2="0" y2="1"><stop offset="0%"   stopColor={AGENT_BACKDROP_COLOR} stopOpacity={0.35} /><stop offset="100%" stopColor={AGENT_BACKDROP_COLOR} stopOpacity={0.03} /></linearGradient>
+          {selectedAgent && <linearGradient id="grad-agent" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={selectedAgent.color} stopOpacity={0.9} /><stop offset="100%" stopColor={selectedAgent.color} stopOpacity={0.1} /></linearGradient>}
+          <filter id="glow-agent" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
         </defs>
         {gridYs.map((y, i) => <line key={i} x1={padL} x2={W - padR} y1={y} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth={1} />)}
-        {popArea && <path d={popArea} fill={`url(#${popFillId})`} stroke="none" />}
-        {popLine && <path d={popLine} fill="none" stroke={popStroke} strokeOpacity={focused ? 0.55 : 0.95} strokeWidth={focused ? 1 : 1.5} strokeLinejoin="round" strokeLinecap="round" />}
-        {selectedAgent && agentArea && (
-          <>
-            <path d={agentArea} fill="url(#grad-agent)" stroke="none" />
-            <path d={agentLine} fill="none" stroke={selectedAgent.color} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" filter="url(#glow-agent)" />
-          </>
-        )}
-        {hover && (
-          <g>
-            <line x1={hover.x} x2={hover.x} y1={padT} y2={padT + innerH} stroke="rgba(255,255,255,0.4)" strokeWidth={1} strokeDasharray="3 3" />
-            {selectedAgent && <circle cx={hover.x} cy={yAt(hoverAgent)} r={3.5} fill="#0a0a0c" stroke={selectedAgent.color} strokeWidth={1.5} />}
-            <circle cx={hover.x} cy={yAt(hoverPop)} r={3.5} fill="#0a0a0c" stroke={focused ? "rgba(255,255,255,0.65)" : PULSE_COLOR} strokeWidth={1.5} />
-          </g>
-        )}
+        {popArea  && <path d={popArea}  fill={`url(#${popFillId})`} stroke="none" />}
+        {popLine  && <path d={popLine}  fill="none" stroke={popStroke} strokeOpacity={focused ? 0.55 : 0.95} strokeWidth={focused ? 1 : 1.5} strokeLinejoin="round" strokeLinecap="round" />}
+        {selectedAgent && agentArea && (<><path d={agentArea} fill="url(#grad-agent)" stroke="none" /><path d={agentLine} fill="none" stroke={selectedAgent.color} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" filter="url(#glow-agent)" /></>)}
+        {hover && (<g>
+          <line x1={hover.x} x2={hover.x} y1={padT} y2={padT + innerH} stroke="rgba(255,255,255,0.4)" strokeWidth={1} strokeDasharray="3 3" />
+          {selectedAgent && <circle cx={hover.x} cy={yAt(hoverAgent)} r={3.5} fill="#0a0a0c" stroke={selectedAgent.color} strokeWidth={1.5} />}
+          <circle cx={hover.x} cy={yAt(hoverPop)} r={3.5} fill="#0a0a0c" stroke={focused ? "rgba(255,255,255,0.65)" : PULSE_COLOR} strokeWidth={1.5} />
+        </g>)}
       </svg>
-
       <div className="pointer-events-none absolute bottom-2 left-4 right-4 flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground/70">
-        <span>Earlier</span>
-        <span>City Movement · Last {frames.length} ticks</span>
-        <span>Now</span>
+        <span>Earlier</span><span>City Movement · Last {frames.length} ticks</span><span>Now</span>
       </div>
-
       {hover && (
         <div className="pointer-events-none absolute z-10 rounded-sm border border-border/70 bg-[#0a0a0c]/95 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] shadow-xl backdrop-blur"
           style={{ left: Math.min(hover.x + 12, W - 170), top: Math.max(padT, Math.min(yAt(hoverPop), yAt(hoverAgent)) - 36) }}>
-          {selectedAgent ? (
-            <>
-              <div className="flex items-center gap-1.5">
-                <span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: selectedAgent.color }} />
-                <span className="text-foreground tabular-nums">{hoverAgentPct.toFixed(1)}%</span>
-                <span className="text-muted-foreground">{selectedAgent.name}</span>
-              </div>
-              <div className="mt-0.5 flex items-center gap-1.5">
-                <span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: AGENT_BACKDROP_COLOR }} />
-                <span className="text-foreground/70 tabular-nums">{hoverPopPct.toFixed(1)}%</span>
-                <span className="text-muted-foreground">City Avg</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-muted-foreground">City Movement</div>
-              <div className="mt-0.5 text-foreground tabular-nums">{hoverPopPct.toFixed(1)}%</div>
-            </>
-          )}
+          {selectedAgent ? (<>
+            <div className="flex items-center gap-1.5"><span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: selectedAgent.color }} /><span className="text-foreground tabular-nums">{hoverAgentPct.toFixed(1)}%</span><span className="text-muted-foreground">{selectedAgent.name}</span></div>
+            <div className="mt-0.5 flex items-center gap-1.5"><span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: AGENT_BACKDROP_COLOR }} /><span className="text-foreground/70 tabular-nums">{hoverPopPct.toFixed(1)}%</span><span className="text-muted-foreground">City Avg</span></div>
+          </>) : (<><div className="text-muted-foreground">City Movement</div><div className="mt-0.5 text-foreground tabular-nums">{hoverPopPct.toFixed(1)}%</div></>)}
         </div>
       )}
-
       {frames.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            {running ? "Awaiting telemetry." : "Press launch to begin telemetry"}
-          </span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{running ? "Awaiting telemetry." : "Press launch to begin telemetry"}</span>
         </div>
       )}
-
       <div className="pointer-events-none absolute left-3 top-2 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em]">
-        {selectedAgent ? (
-          <>
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: selectedAgent.color }} />
-              <span className="text-foreground">{selectedAgent.name}</span>
-            </span>
-            <span className="flex items-center gap-1.5 text-muted-foreground">
-              <span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: AGENT_BACKDROP_COLOR }} />
-              City Avg
-            </span>
-          </>
-        ) : (
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: PULSE_COLOR }} />
-            <span className="text-foreground">City Movement</span>
-          </span>
+        {selectedAgent ? (<>
+          <span className="flex items-center gap-1.5"><span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: selectedAgent.color }} /><span className="text-foreground">{selectedAgent.name}</span></span>
+          <span className="flex items-center gap-1.5 text-muted-foreground"><span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: AGENT_BACKDROP_COLOR }} />City Avg</span>
+        </>) : (
+          <span className="flex items-center gap-1.5"><span className="inline-block size-1.5 rounded-full" style={{ backgroundColor: PULSE_COLOR }} /><span className="text-foreground">City Movement</span></span>
         )}
       </div>
     </div>
